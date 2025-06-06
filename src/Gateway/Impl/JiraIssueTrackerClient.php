@@ -60,7 +60,7 @@ readonly class JiraIssueTrackerClient implements IssueTrackerGateway
                 ->request('GET', "/rest/api/latest/issue/$issueIdentifier")
                 ->getContent();
 
-            return json_decode($issueContent, true, 512, JSON_THROW_ON_ERROR)['fields']['description'];
+            return json_decode($issueContent, true, 512, JSON_THROW_ON_ERROR)['fields']['description'] ?? '';
         } catch (TransportExceptionInterface $e) {
             throw new IssueSynchronizationFailedException($e->getMessage());
         }
