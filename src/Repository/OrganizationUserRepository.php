@@ -16,10 +16,6 @@ class OrganizationUserRepository extends ServiceEntityRepository
         return parent::__construct($registry, OrganizationUser::class);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function delete(OrganizationUser $organizationUser): void
     {
         $this->_em->remove($organizationUser);
@@ -31,10 +27,6 @@ class OrganizationUserRepository extends ServiceEntityRepository
         return $this->findOneBy(['user' => $user, 'organization' => $organization]);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function makeAdmin(User $user, Organization $organization): void
     {
         $organizationUser = new OrganizationUser();
@@ -45,10 +37,6 @@ class OrganizationUserRepository extends ServiceEntityRepository
         $this->save($organizationUser);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function save(OrganizationUser $organizationUser): void
     {
         $this->_em->persist($organizationUser);

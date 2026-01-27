@@ -14,10 +14,6 @@ class FeatureRepository extends ServiceEntityRepository
         return parent::__construct($registry, Feature::class);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function delete(Feature $feature): void
     {
         $this->_em->remove($feature);
@@ -60,10 +56,6 @@ SQL;
         return $features;
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function save(Feature $feature): void
     {
         $this->_em->persist($feature);

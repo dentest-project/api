@@ -1,0 +1,51 @@
+@startuml
+
+participant Browser
+participant JsonRpcFrontController
+participant JsonRpcRequestHandler
+participant EventApplicableGuard
+database Event
+participant EventDispatcher
+participant EventHappenedListener
+participant ProjectionBuilder
+database Projection
+
+Browser -> JsonRpcFrontController: { jsonrpc, method, params, id }\n(or array of that)
+activate JsonRpcFrontController
+JsonRpcFrontController -> JsonRpcFrontController: parses payload to split in\nunique JSON-RPC request\npayloads
+loop for each payload
+    JsonRpcFrontController -> JsonRpcRequestHandler
+    activate JsonRpcRequestHandler
+    JsonRpcRequestHandler -> JsonRpcRequestHandler: searches event registry
+    note right of JsonRpcRequestHandler: if not found throw code -32601
+    JsonRpcRequestHandler -> JsonRpcRequestHandler: Compare payload to expected event
+    note right of JsonRpcRequestHandler: if not compliant throw code -32602
+    JsonRpcRequestHandler -> JsonRpcRequestHandler: search for accurate EventApplicableGuard
+    alt if guard found
+        JsonRpcRequestHandler -> EventApplicableGuard: check applicability
+        note right of JsonRpcRequestHandler: if not applicable throw code 1 or sth
+    end
+    JsonRpcRequestHandler -> JsonRpcRequestHandler: convert request into persistable event
+    JsonRpcRequestHandler -> Event: persist event
+    JsonRpcRequestHandler -> EventDispatcher: dispatch kernel.terminate event\nholding event instance
+    activate EventDispatcher
+    JsonRpcRequestHandler -> JsonRpcFrontController:
+    deactivate JsonRpcRequestHandler
+end
+JsonRpcFrontController -> Browser: [{jsonrpc, id, result|error}, ...]
+& EventDispatcher -->(30) EventHappenedListener
+activate EventHappenedListener
+
+deactivate EventDispatcher
+deactivate JsonRpcFrontController
+EventHappenedListener -> EventHappenedListener: Find all projection builders\nfor event
+loop for each projection found
+    EventHappenedListener -> ProjectionBuilder: build projection
+    activate ProjectionBuilder
+    ProjectionBuilder -> EventHappenedListener: projection
+    deactivate ProjectionBuilder
+    EventHappenedListener -> Projection: persist projection
+    EventHappenedListener -> Browser: server sent event with projection and date
+end
+deactivate EventHappenedListener
+@enduml

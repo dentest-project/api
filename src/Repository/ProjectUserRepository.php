@@ -16,10 +16,6 @@ class ProjectUserRepository extends ServiceEntityRepository
         return parent::__construct($registry, ProjectUser::class);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function delete(ProjectUser $projectUser): void
     {
         $this->_em->remove($projectUser);
@@ -31,10 +27,6 @@ class ProjectUserRepository extends ServiceEntityRepository
         return $this->findOneBy(['user' => $user, 'project' => $project]);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function makeAdmin(User $user, Project $project): void
     {
         $projectUser = new ProjectUser();
@@ -45,10 +37,6 @@ class ProjectUserRepository extends ServiceEntityRepository
         $this->save($projectUser);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function save(ProjectUser $projectUser): void
     {
         $this->_em->persist($projectUser);

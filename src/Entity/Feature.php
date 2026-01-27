@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Domain\Fact\Projection\Projection;
 use App\Repository\FeatureRepository;
 use App\Serializer\Groups;
 use Cocur\Slugify\Slugify;
@@ -13,7 +14,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: FeatureRepository::class)]
 #[ORM\UniqueConstraint(columns: ['slug', 'path_id'])]
 #[ORM\HasLifecycleCallbacks]
-class Feature
+class Feature implements Projection
 {
     public const FEATURE_STATUS_DRAFT = 'draft';
 
@@ -41,6 +42,7 @@ class Feature
     #[Assert\Length(max: 1024, normalizer: 'trim')]
     public string $description = "As an <actor>\nI want to <action>\nSo that <consequence>";
 
+    /** @var iterable<Scenario>  */
     #[Serializer\Groups([Groups::ReadFeature->value])]
     #[ORM\OneToMany(mappedBy: 'feature', targetEntity: Scenario::class, cascade: ['all'], orphanRemoval: true)]
     #[ORM\OrderBy(['priority' => 'ASC'])]
@@ -52,7 +54,7 @@ class Feature
 
     #[Serializer\Groups([Groups::ReadFeature->value, Groups::ReadPath->value])]
     #[ORM\Column(type: 'string', columnDefinition: 'feature_status')]
-    public string $status = self::FEATURE_STATUS_DRAFT;
+    public FeatureStatus $status = FeatureStatus::Draft;
 
     #[Serializer\Groups([Groups::ReadFeature->value])]
     #[ORM\ManyToMany(targetEntity: Tag::class)]

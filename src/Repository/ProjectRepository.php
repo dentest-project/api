@@ -170,10 +170,6 @@ SQL;
         return $result[0];
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function save(Project $project): void
     {
         $this->_em->persist($project);

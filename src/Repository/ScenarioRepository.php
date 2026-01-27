@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\Feature;
 use App\Entity\Project;
 use App\Entity\Scenario;
+use App\Entity\ScenarioType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -41,7 +41,7 @@ SQL;
 
         return $this->findBy([
             'feature' => array_map(fn (array $id) => $id['id'], $result),
-            'type' => Scenario::TYPE_BACKGROUND
+            'type' => ScenarioType::Background->value
         ]);
     }
 }

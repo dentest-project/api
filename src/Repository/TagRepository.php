@@ -13,20 +13,12 @@ class TagRepository extends ServiceEntityRepository
         return parent::__construct($registry, Tag::class);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function save(Tag $tag): void
     {
         $this->_em->persist($tag);
         $this->_em->flush();
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function delete(Tag $tag): void
     {
         $this->_em->remove($tag);

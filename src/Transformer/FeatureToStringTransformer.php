@@ -7,7 +7,9 @@ use App\Entity\InlineStepParam;
 use App\Entity\MultilineStepParam;
 use App\Entity\Scenario;
 use App\Entity\ScenarioStep;
-use App\Entity\Step;
+use App\Entity\ScenarioStepAdverb;
+use App\Entity\ScenarioType;
+use App\Entity\StepParamType;
 use App\Entity\StepPart;
 use App\Entity\TableStepParam;
 use App\Entity\Tag;
@@ -77,11 +79,11 @@ class FeatureToStringTransformer
 
     private function getScenarioHeadline(Scenario $scenario): string
     {
-        if ($scenario->type === Scenario::TYPE_BACKGROUND) {
+        if ($scenario->type === ScenarioType::Background) {
             return '  Background:';
         }
 
-        return sprintf('  %s: %s', $scenario->type === Scenario::TYPE_REGULAR ? 'Scenario' : 'Scenario outline', $scenario->title);
+        return sprintf('  %s: %s', $scenario->type === ScenarioType::Regular ? 'Scenario' : 'Scenario outline', $scenario->title);
     }
 
     private function getSteps(Scenario $scenario): string
@@ -98,20 +100,13 @@ class FeatureToStringTransformer
 
     private function getStepAdverb(ScenarioStep $step): string
     {
-        switch ($step->adverb) {
-            case ScenarioStep::ADVERB_GIVEN:
-                return '    Given';
-            case ScenarioStep::ADVERB_WHEN:
-                return '    When';
-            case ScenarioStep::ADVERB_THEN:
-                return '    Then';
-            case ScenarioStep::ADVERB_AND:
-                return '    And';
-            case ScenarioStep::ADVERB_BUT:
-                return '    But';
-            default:
-                return '    ';
-        }
+        return match ($step->adverb) {
+            ScenarioStepAdverb::Given => '    Given',
+            ScenarioStepAdverb::When => '    When',
+            ScenarioStepAdverb::Then => '    Then',
+            ScenarioStepAdverb::And => '    And',
+            ScenarioStepAdverb::But => '    But'
+        };
     }
 
     private function getStepSentence(ScenarioStep $step): string
@@ -143,11 +138,11 @@ class FeatureToStringTransformer
 
     private function getExtraParam(ScenarioStep $step): string
     {
-        if ($step->step->extraParamType === Step::EXTRA_PARAM_TYPE_NONE) {
+        if ($step->step->extraParamType === StepParamType::None) {
             return '';
         }
 
-        return $step->step->extraParamType === Step::EXTRA_PARAM_TYPE_MULTILINE ? $this->getMultilineExtraParam($step) : $this->getTableExtraParam($step);
+        return $step->step->extraParamType === StepParamType::Multiline ? $this->getMultilineExtraParam($step) : $this->getTableExtraParam($step);
     }
 
     private function getMultilineExtraParam(ScenarioStep $step): string
@@ -222,7 +217,7 @@ class FeatureToStringTransformer
 
     private function getExamples(Scenario $scenario): string
     {
-        if ($scenario->type !== Scenario::TYPE_OUTLINE) {
+        if ($scenario->type !== ScenarioType::Outline) {
             return '';
         }
 

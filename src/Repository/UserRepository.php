@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Organization;
 use App\Entity\User;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -24,7 +25,7 @@ class UserRepository extends ServiceEntityRepository
             ->where('u.email = :email')
             ->andWhere('u.lastResetPasswordRequest < :timestamp OR u.lastResetPasswordRequest IS NULL')
             ->setParameter('email', $email)
-            ->setParameter('timestamp', new \DateTime('2 hours ago'))
+            ->setParameter('timestamp', new DateTime('2 hours ago'))
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -60,20 +61,12 @@ class UserRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function delete(User $user): void
     {
         $this->_em->remove($user);
         $this->_em->flush();
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function save(User $user): void
     {
         $this->_em->persist($user);

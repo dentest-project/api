@@ -35,21 +35,12 @@ class OrganizationIssueTrackerConfigurationRepository extends ServiceEntityRepos
         return $configuration;
     }
 
-    /**
-     * @throws \Doctrine\ORM\Exception\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\DBAL\Exception\UniqueConstraintViolationException
-     */
     public function save(OrganizationIssueTrackerConfiguration $configuration): void
     {
         $this->_em->persist($configuration);
         $this->_em->flush();
     }
 
-    /**
-     * @throws \Doctrine\ORM\Exception\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function delete(OrganizationIssueTrackerConfiguration $configuration): void
     {
         $this->_em->remove($configuration);

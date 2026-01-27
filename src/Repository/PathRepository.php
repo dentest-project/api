@@ -15,10 +15,6 @@ class PathRepository extends ServiceEntityRepository
         return parent::__construct($registry, Path::class);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function delete(Path $path): void
     {
         $this->_em->remove($path);
@@ -42,7 +38,8 @@ SQL;
     }
 
     /**
-     * @throws PathNotFoundException
+     * @throws \App\Exception\PathNotFoundException
+     * @throws \Doctrine\DBAL\Exception
      */
     public function findRootPath(Path $path): ?Path
     {
@@ -71,10 +68,6 @@ SQL;
         return $this->find($result[0]['root_id']);
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function save(Path $path): void
     {
         $this->_em->persist($path);

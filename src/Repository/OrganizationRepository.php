@@ -27,21 +27,12 @@ class OrganizationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function delete(Organization $organization): void
     {
         $this->_em->remove($organization);
         $this->_em->flush();
     }
 
-    /**
-     * @throws \Doctrine\DBAL\Exception\UniqueConstraintViolationException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function save(Organization $organization): void
     {
         $this->_em->persist($organization);

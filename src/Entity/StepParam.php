@@ -10,9 +10,9 @@ use Symfony\Component\Serializer\Annotation as Serializer;
 #[ORM\InheritanceType('JOINED')]
 #[ORM\DiscriminatorColumn(name: 'type', type: 'string', columnDefinition: 'param_type')]
 #[ORM\DiscriminatorMap([
-    'inline' => InlineStepParam::class,
-    'multiline' => MultilineStepParam::class,
-    'table' => TableStepParam::class
+    StepParamType::Inline->value => InlineStepParam::class,
+    StepParamType::Multiline->value => MultilineStepParam::class,
+    StepParamType::Table->value => TableStepParam::class
 ])]
 abstract class StepParam
 {
@@ -25,12 +25,12 @@ abstract class StepParam
     public ScenarioStep $step;
 
     #[Serializer\Groups([Groups::ReadFeature->value])]
-    public function getType(): string
+    public function getType(): StepParamType
     {
         return match (static::class) {
-            InlineStepParam::class => 'inline',
-            MultilineStepParam::class => 'multiline',
-            TableStepParam::class => 'table',
+            InlineStepParam::class => StepParamType::Inline,
+            MultilineStepParam::class => StepParamType::Multiline,
+            TableStepParam::class => StepParamType::Table,
         };
     }
 }

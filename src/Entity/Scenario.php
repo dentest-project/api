@@ -9,10 +9,6 @@ use Symfony\Component\Serializer\Annotation as Serializer;
 #[ORM\Entity]
 class Scenario
 {
-    const TYPE_BACKGROUND = 'background';
-    const TYPE_OUTLINE = 'outline';
-    const TYPE_REGULAR = 'regular';
-
     #[Serializer\Groups([Groups::ReadFeature->value])]
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
@@ -23,7 +19,7 @@ class Scenario
 
     #[Serializer\Groups([Groups::ReadFeature->value])]
     #[ORM\Column(type: 'string', columnDefinition: 'scenario_type')]
-    public string $type;
+    public ScenarioType $type;
 
     #[Serializer\Groups([Groups::ReadFeature->value])]
     #[ORM\Column(type: 'string')]
