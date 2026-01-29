@@ -42,6 +42,11 @@ class Feature
     public string $description = "As an <actor>\nI want to <action>\nSo that <consequence>";
 
     #[Serializer\Groups([Groups::ReadFeature->value])]
+    #[ORM\Column(type: 'string')]
+    #[Assert\Length(max: 10000, normalizer: 'trim')]
+    public string $summary = '';
+
+    #[Serializer\Groups([Groups::ReadFeature->value])]
     #[ORM\OneToMany(mappedBy: 'feature', targetEntity: Scenario::class, cascade: ['all'], orphanRemoval: true)]
     #[ORM\OrderBy(['priority' => 'ASC'])]
     public iterable $scenarios = [];
