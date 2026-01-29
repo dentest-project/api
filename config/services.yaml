@@ -46,3 +46,21 @@ services:
             - "%env(ALLOWED_ORIGIN)%"
         tags:
             - { name: kernel.event_subscriber }
+
+    ###########################
+    # FEATURE SUMMARY GENERATOR #
+    ###########################
+    App\FeatureSummary\FeatureSummaryGenerator:
+        arguments:
+            $baseUrl: '%env(FEATURE_SUMMARY_BASE_URL)%'
+            $model: '%env(FEATURE_SUMMARY_MODEL)%'
+            $timeout: '%env(int:FEATURE_SUMMARY_TIMEOUT)%'
+            $streamTimeout: '%env(int:FEATURE_SUMMARY_STREAM_TIMEOUT)%'
+            $maxInputChars: '%env(int:FEATURE_SUMMARY_MAX_INPUT_CHARS)%'
+            $maxOutputChars: '%env(int:FEATURE_SUMMARY_MAX_OUTPUT_CHARS)%'
+            $projectContextMaxChars: '%env(int:FEATURE_SUMMARY_PROJECT_CONTEXT_MAX_CHARS)%'
+            $projectFeatureMaxChars: '%env(int:FEATURE_SUMMARY_PROJECT_FEATURE_MAX_CHARS)%'
+            $temperature: '%env(float:FEATURE_SUMMARY_TEMPERATURE)%'
+            $numPredict: '%env(int:FEATURE_SUMMARY_NUM_PREDICT)%'
+            $includeProjectContext: '%env(bool:FEATURE_SUMMARY_INCLUDE_PROJECT_CONTEXT)%'
+            $numCtx: '%env(int:FEATURE_SUMMARY_NUM_CTX)%'

@@ -7,6 +7,9 @@ services:
       target: app_main
       dockerfile: ./installer/prod/Dockerfile
     restart: unless-stopped
+    depends_on:
+      - database
+      - ollama
     volumes:
       - php_socket:/var/run/php
       - jwt:/srv/app/config/jwt
@@ -16,6 +19,18 @@ services:
       ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://dentest.tech}
       JWT_PASSPHRASE: ${JWT_PASSPHRASE:-passphrase}
       MAILER_DSN: ${MAILER_DSN:-}
+      FEATURE_SUMMARY_BASE_URL: ${FEATURE_SUMMARY_BASE_URL:-http://ollama:11434}
+      FEATURE_SUMMARY_MODEL: ${FEATURE_SUMMARY_MODEL:-llama3.2:3b}
+      FEATURE_SUMMARY_TIMEOUT: ${FEATURE_SUMMARY_TIMEOUT:-60}
+      FEATURE_SUMMARY_STREAM_TIMEOUT: ${FEATURE_SUMMARY_STREAM_TIMEOUT:-300}
+      FEATURE_SUMMARY_MAX_INPUT_CHARS: ${FEATURE_SUMMARY_MAX_INPUT_CHARS:-12000}
+      FEATURE_SUMMARY_MAX_OUTPUT_CHARS: ${FEATURE_SUMMARY_MAX_OUTPUT_CHARS:-5000}
+      FEATURE_SUMMARY_PROJECT_CONTEXT_MAX_CHARS: ${FEATURE_SUMMARY_PROJECT_CONTEXT_MAX_CHARS:-200000}
+      FEATURE_SUMMARY_PROJECT_FEATURE_MAX_CHARS: ${FEATURE_SUMMARY_PROJECT_FEATURE_MAX_CHARS:-20000}
+      FEATURE_SUMMARY_INCLUDE_PROJECT_CONTEXT: ${FEATURE_SUMMARY_INCLUDE_PROJECT_CONTEXT:-1}
+      FEATURE_SUMMARY_NUM_CTX: ${FEATURE_SUMMARY_NUM_CTX:-16384}
+      FEATURE_SUMMARY_TEMPERATURE: ${FEATURE_SUMMARY_TEMPERATURE:-0.2}
+      FEATURE_SUMMARY_NUM_PREDICT: ${FEATURE_SUMMARY_NUM_PREDICT:-256}
     networks:
       - db
   caddy:
@@ -49,12 +64,29 @@ services:
     user: root
     networks:
       - db
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    environment:
+      OLLAMA_MODEL: ${FEATURE_SUMMARY_MODEL:-llama3.2:3b}
+    volumes:
+      - ollama-data:/root/.ollama
+    command: >
+      sh -c "ollama serve &
+      sleep 2;
+      if ! ollama list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx \"${OLLAMA_MODEL:-llama3.2:3b}\"; then
+        ollama pull ${OLLAMA_MODEL:-llama3.2:3b};
+      fi;
+      wait"
+    networks:
+      - db
 volumes:
   php_socket:
   caddy_data:
   caddy_config:
   db-data:
   jwt:
+  ollama-data:
 
 networks:
   db:

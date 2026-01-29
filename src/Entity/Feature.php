@@ -16,6 +16,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Feature
 {
     public const FEATURE_STATUS_DRAFT = 'draft';
+    public const FEATURE_STATUS_READY_TO_DEV = 'ready_to_dev';
+    public const FEATURE_STATUS_LIVE = 'live';
 
     #[Serializer\Groups([
         Groups::ListFeatures->value,
@@ -42,7 +44,7 @@ class Feature
     public string $description = "As an <actor>\nI want to <action>\nSo that <consequence>";
 
     #[Serializer\Groups([Groups::ReadFeature->value])]
-    #[ORM\Column(type: 'string')]
+    #[ORM\Column(type: 'text')]
     #[Assert\Length(max: 10000, normalizer: 'trim')]
     public string $summary = '';
 
