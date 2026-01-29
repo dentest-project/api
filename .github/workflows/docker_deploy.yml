@@ -19,13 +19,17 @@ jobs:
           ACTOR: ${{ github.actor }}
           CR_PAT: ${{ secrets.READ_PACKAGES_REGISTRY_TOKEN }}
           MAILER_DSN: ${{ secrets.PROD_MAILER_DSN }}
-        run: echo "Adding deployer agent identity" &&
-          eval `ssh-agent -s` && ssh-add <(echo "$DEPLOYER_AGENT_PRIVATE_KEY") &&
-          echo "Creating directories on server" &&
-          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "mkdir -p $DEPLOY_DIR" &&
-          echo "Uploading installer to server" &&
-          scp -o StrictHostKeyChecking=no -r installer deployer-agent@$DEPLOY_TO:$DEPLOY_DIR/ &&
-          echo "Logging Docker in Github package registry" &&
-          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "echo $CR_PAT | docker login ghcr.io -u $ACTOR --password-stdin" &&
-          echo "Running container" &&
-          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && ALLOWED_ORIGIN=https://dentest.tech COMPOSE_PROJECT_NAME=dentest_api HTTP_PORT=8002 JWT_CERTS=/var/www/dockerized-dentest-api/jwt POSTGRES_DATA=/var/www/dockerized-dentest-api/data MAILER_DSN=$MAILER_DSN SERVER_NAME=http://127.0.0.1 docker compose -f ./installer/prod/docker-compose.yml up -d --remove-orphans --build"
+        run: |
+          echo "Adding deployer agent identity"
+          eval `ssh-agent -s`
+          ssh-add <(echo "$DEPLOYER_AGENT_PRIVATE_KEY")
+          echo "Creating directories on server"
+          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "mkdir -p $DEPLOY_DIR"
+          echo "Uploading installer to server"
+          scp -o StrictHostKeyChecking=no -r installer deployer-agent@$DEPLOY_TO:$DEPLOY_DIR/
+          echo "Logging Docker in Github package registry"
+          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "echo $CR_PAT | docker login ghcr.io -u $ACTOR --password-stdin"
+          echo "Pulling Ollama model if missing"
+          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && MODEL=${FEATURE_SUMMARY_MODEL:-llama3.2:3b} && if ! docker compose -f ./installer/prod/docker-compose.yml run --rm ollama show \"\$MODEL\" >/dev/null 2>&1; then docker compose -f ./installer/prod/docker-compose.yml run --rm ollama pull \"\$MODEL\"; fi"
+          echo "Running container"
+          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && ALLOWED_ORIGIN=https://dentest.tech FEATURE_SUMMARY_MODEL=${FEATURE_SUMMARY_MODEL:-llama3.2:3b} COMPOSE_PROJECT_NAME=dentest_api HTTP_PORT=8002 JWT_CERTS=/var/www/dockerized-dentest-api/jwt POSTGRES_DATA=/var/www/dockerized-dentest-api/data MAILER_DSN=$MAILER_DSN SERVER_NAME=http://127.0.0.1 docker compose -f ./installer/prod/docker-compose.yml up -d --remove-orphans --build"

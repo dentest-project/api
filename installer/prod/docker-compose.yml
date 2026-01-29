@@ -74,20 +74,6 @@ services:
     command: ["serve"]
     networks:
       - db
-  ollama-init:
-    image: curlimages/curl:8.6.0
-    depends_on:
-      - ollama
-    environment:
-      OLLAMA_MODEL: ${FEATURE_SUMMARY_MODEL:-llama3.2:3b}
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      until curl -sf http://ollama:11434/api/tags >/dev/null; do sleep 1; done;
-      if ! curl -sf -X POST http://ollama:11434/api/show -H 'Content-Type: application/json' -d "{\"name\":\"${OLLAMA_MODEL:-llama3.2:3b}\"}" >/dev/null; then
-        curl -s -X POST http://ollama:11434/api/pull -H 'Content-Type: application/json' -d "{\"name\":\"${OLLAMA_MODEL:-llama3.2:3b}\"}";
-      fi
-    networks:
-      - db
 volumes:
   php_socket:
   caddy_data:
