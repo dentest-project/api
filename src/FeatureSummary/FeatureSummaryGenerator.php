@@ -3,6 +3,7 @@
 namespace App\FeatureSummary;
 
 use App\Entity\Feature;
+use App\Entity\Path;
 use App\Entity\Scenario;
 use App\Transformer\FeatureToStringTransformer;
 use Doctrine\Common\Collections\Collection;
@@ -157,6 +158,7 @@ readonly class FeatureSummaryGenerator
             return '';
         }
 
+        $superPath = $editedFeature->path->parent ?? $editedFeature->path;
         $blocks = [];
         $remaining = $this->projectContextMaxChars;
 
@@ -166,6 +168,10 @@ readonly class FeatureSummaryGenerator
             }
 
             if ($projectFeature->id === $editedFeature->id) {
+                continue;
+            }
+
+            if (!$this->isUnderPath($projectFeature->path ?? null, $superPath)) {
                 continue;
             }
 
@@ -196,7 +202,6 @@ readonly class FeatureSummaryGenerator
     {
         $block = sprintf('Item: %s', $feature->title);
         $scenarios = $feature->scenarios instanceof Collection ? $feature->scenarios->toArray() : $feature->scenarios;
-        $scenarioTitles = [];
 
         foreach ($scenarios as $scenario) {
             if (!$scenario instanceof Scenario) {
@@ -212,14 +217,30 @@ readonly class FeatureSummaryGenerator
                 default => 'Scenario'
             };
             $title = trim($scenario->title);
-            $scenarioTitles[] = $title !== '' ? sprintf('%s: %s', $label, $title) : $label;
-        }
-
-        if (count($scenarioTitles) > 0) {
-            $block .= "\n" . implode("\n", array_map(static fn (string $title): string => sprintf('  - %s', $title), $scenarioTitles));
+            $summaryLine = $title !== '' ? sprintf('%s: %s', $label, $title) : $label;
+            $block .= sprintf("\n  - %s", $summaryLine);
+            break;
         }
 
         return $this->truncate($block, $this->projectFeatureMaxChars);
+    }
+
+    private function isUnderPath(?Path $path, ?Path $ancestor): bool
+    {
+        if ($ancestor === null) {
+            return true;
+        }
+
+        $current = $path;
+        while ($current !== null) {
+            if ($current->id === $ancestor->id) {
+                return true;
+            }
+
+            $current = $current->parent;
+        }
+
+        return false;
     }
 
     private function buildPrompt(string $featureText, string $contextText): string
