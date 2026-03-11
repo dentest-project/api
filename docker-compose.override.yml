@@ -23,13 +23,6 @@ services:
       - ./public:/srv/app/public:ro
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
 
-  ollama:
-    image: ollama/ollama:latest
-    volumes:
-      - ollama-data:/root/.ollama
-    ports:
-      - "11434:11434"
-
   ###> symfony/mercure-bundle ###
   ###< symfony/mercure-bundle ###
 
@@ -40,6 +33,3 @@ services:
     ports:
       - "5432"
 ###< doctrine/doctrine-bundle ###
-
-volumes:
-  ollama-data:

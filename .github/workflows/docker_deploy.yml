@@ -19,6 +19,8 @@ jobs:
           ACTOR: ${{ github.actor }}
           CR_PAT: ${{ secrets.READ_PACKAGES_REGISTRY_TOKEN }}
           MAILER_DSN: ${{ secrets.PROD_MAILER_DSN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          FEATURE_SUMMARY_MODEL: "stepfun/step-3.5-flash"
         run: |
           echo "Adding deployer agent identity"
           eval `ssh-agent -s`
@@ -29,7 +31,5 @@ jobs:
           scp -o StrictHostKeyChecking=no -r installer deployer-agent@$DEPLOY_TO:$DEPLOY_DIR/
           echo "Logging Docker in Github package registry"
           ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "echo $CR_PAT | docker login ghcr.io -u $ACTOR --password-stdin"
-          echo "Pulling Ollama model if missing"
-          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && MODEL=${FEATURE_SUMMARY_MODEL:-llama3.2:3b} && docker compose -f ./installer/prod/docker-compose.yml up -d database ollama && for i in \$(seq 1 30); do docker compose -f ./installer/prod/docker-compose.yml exec -T ollama ollama list >/dev/null 2>&1 && break; sleep 1; done && if ! docker compose -f ./installer/prod/docker-compose.yml exec -T ollama ollama show \"\$MODEL\" >/dev/null 2>&1; then docker compose -f ./installer/prod/docker-compose.yml exec -T ollama ollama pull \"\$MODEL\"; fi"
           echo "Running container"
-          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && ALLOWED_ORIGIN=https://dentest.tech FEATURE_SUMMARY_MODEL=${FEATURE_SUMMARY_MODEL:-llama3.2:3b} FEATURE_SUMMARY_TIMEOUT=300 FEATURE_SUMMARY_STREAM_TIMEOUT=300 FEATURE_SUMMARY_MAX_INPUT_CHARS=3000 FEATURE_SUMMARY_MAX_OUTPUT_CHARS=900 FEATURE_SUMMARY_PROJECT_CONTEXT_MAX_CHARS=6000 FEATURE_SUMMARY_PROJECT_FEATURE_MAX_CHARS=400 FEATURE_SUMMARY_NUM_CTX=2048 FEATURE_SUMMARY_TEMPERATURE=0.2 FEATURE_SUMMARY_NUM_PREDICT=120 COMPOSE_PROJECT_NAME=dentest_api HTTP_PORT=8002 JWT_CERTS=/var/www/dockerized-dentest-api/jwt POSTGRES_DATA=/var/www/dockerized-dentest-api/data MAILER_DSN=$MAILER_DSN SERVER_NAME=http://127.0.0.1 docker compose -f ./installer/prod/docker-compose.yml up -d --remove-orphans --build --no-deps main caddy"
+          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && ALLOWED_ORIGIN=https://dentest.tech OPENROUTER_API_KEY=$OPENROUTER_API_KEY FEATURE_SUMMARY_MODEL=$FEATURE_SUMMARY_MODEL FEATURE_SUMMARY_TIMEOUT=300 FEATURE_SUMMARY_PROJECT_CONTEXT_MAX_CHARS=200000 FEATURE_SUMMARY_PROJECT_FEATURE_MAX_CHARS=20000 COMPOSE_PROJECT_NAME=dentest_api HTTP_PORT=8002 JWT_CERTS=/var/www/dockerized-dentest-api/jwt POSTGRES_DATA=/var/www/dockerized-dentest-api/data MAILER_DSN=$MAILER_DSN SERVER_NAME=http://127.0.0.1 docker compose -f ./installer/prod/docker-compose.yml up -d --remove-orphans --build --no-deps main caddy"

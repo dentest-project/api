@@ -11,15 +11,11 @@ services:
     restart: unless-stopped
     volumes:
       - php_socket:/var/run/php
-    healthcheck:
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 30s
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-dentest}:${POSTGRES_PASSWORD:-ChangeMe}@database:5432/${POSTGRES_DB:-dentest}?serverVersion=${POSTGRES_VERSION:-15}
       ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://dentest.local}
       JWT_PASSPHRASE: ${JWT_PASSPHRASE:-passphrase}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
   caddy:
     build:
       context: .
