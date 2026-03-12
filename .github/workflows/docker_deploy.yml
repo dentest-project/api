@@ -20,7 +20,7 @@ jobs:
           CR_PAT: ${{ secrets.READ_PACKAGES_REGISTRY_TOKEN }}
           MAILER_DSN: ${{ secrets.PROD_MAILER_DSN }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          FEATURE_SUMMARY_MODEL: "stepfun/step-3.5-flash"
+          SUMMARY_GENERATION_MODEL: "stepfun/step-3.5-flash"
         run: |
           echo "Adding deployer agent identity"
           eval `ssh-agent -s`
@@ -32,4 +32,4 @@ jobs:
           echo "Logging Docker in Github package registry"
           ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "echo $CR_PAT | docker login ghcr.io -u $ACTOR --password-stdin"
           echo "Running container"
-          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && ALLOWED_ORIGIN=https://dentest.tech OPENROUTER_API_KEY=$OPENROUTER_API_KEY FEATURE_SUMMARY_MODEL=$FEATURE_SUMMARY_MODEL FEATURE_SUMMARY_TIMEOUT=300 FEATURE_SUMMARY_PROJECT_CONTEXT_MAX_CHARS=200000 FEATURE_SUMMARY_PROJECT_FEATURE_MAX_CHARS=20000 COMPOSE_PROJECT_NAME=dentest_api HTTP_PORT=8002 JWT_CERTS=/var/www/dockerized-dentest-api/jwt POSTGRES_DATA=/var/www/dockerized-dentest-api/data MAILER_DSN=$MAILER_DSN SERVER_NAME=http://127.0.0.1 docker compose -f ./installer/prod/docker-compose.yml up -d --remove-orphans --build --no-deps main caddy"
+          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && ALLOWED_ORIGIN=https://dentest.tech OPENROUTER_API_KEY=$OPENROUTER_API_KEY SUMMARY_GENERATION_MODEL=$SUMMARY_GENERATION_MODEL SUMMARY_GENERATION_TIMEOUT=300 COMPOSE_PROJECT_NAME=dentest_api HTTP_PORT=8002 JWT_CERTS=/var/www/dockerized-dentest-api/jwt POSTGRES_DATA=/var/www/dockerized-dentest-api/data MAILER_DSN=$MAILER_DSN SERVER_NAME=http://127.0.0.1 docker compose -f ./installer/prod/docker-compose.yml up -d --remove-orphans --build --no-deps main caddy"

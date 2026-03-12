@@ -50,12 +50,34 @@ class Path
     #[ORM\OrderBy(['title' => 'ASC'])]
     public iterable $features = [];
 
+    #[Serializer\Groups([Groups::ReadPath->value, Groups::ReadProject->value])]
+    #[ORM\Column(type: 'text')]
+    public string $summary = '';
+
     #[Serializer\Groups([Groups::ListProjects->value, Groups::ReadFeature->value, Groups::ReadPath->value, Groups::ReadProject->value])]
     #[ORM\Column(type: 'string', length: 255)]
     public string $slug;
 
     #[Serializer\Groups([Groups::ReadFeature->value, Groups::ReadPath->value])]
     public ?Project $rootProject = null;
+
+    public function getDisplayPath(): string
+    {
+        $parts = [];
+        $currentPath = $this;
+
+        while ($currentPath !== null) {
+            $parts[] = $currentPath->path;
+
+            if ($currentPath->project !== null) {
+                break;
+            }
+
+            $currentPath = $currentPath->parent;
+        }
+
+        return implode(' / ', array_reverse($parts));
+    }
 
     #[ORM\PrePersist]
     public function prePersist(): void

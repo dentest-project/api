@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Feature;
 use App\Entity\Project;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ManagerRegistry;
 
 class FeatureRepository extends ServiceEntityRepository
@@ -126,6 +127,49 @@ SQL;
 
         $features = $this->findBy(['id' => array_map(fn (array $row): string => $row['id'], $result)]);
         usort($features, fn (Feature $a, Feature $b) => strcmp($a->title, $b->title));
+
+        return $features;
+    }
+
+    /**
+     * @return Feature[]
+     *
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function findByPathIdAndDescendants(string $pathId, ?string $status = null): array
+    {
+        $query = sprintf(<<<SQL
+WITH RECURSIVE path_rec(id) AS (
+  SELECT p.id
+  FROM path p
+  WHERE p.id = :pathId
+UNION ALL
+  SELECT p.id
+  FROM path p
+  JOIN path_rec pr ON p.parent_id = pr.id
+)
+SELECT f.id
+FROM feature f
+JOIN path_rec pr ON pr.id = f.path_id
+%s
+ORDER BY f.title ASC;
+SQL,
+            $status !== null ? 'WHERE f.status = :status' : ''
+        );
+
+        $parameters = ['pathId' => $pathId];
+        if ($status !== null) {
+            $parameters['status'] = $status;
+        }
+
+        $result = $this->getEntityManager()->getConnection()->fetchAllAssociative($query, $parameters);
+
+        if (count($result) === 0) {
+            return [];
+        }
+
+        $features = $this->findBy(['id' => array_map(fn (array $row): string => $row['id'], $result)]);
+        usort($features, fn (Feature $a, Feature $b) => strcmp($a->getDisplayRootPath(), $b->getDisplayRootPath()));
 
         return $features;
     }

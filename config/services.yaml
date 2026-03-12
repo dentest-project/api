@@ -47,13 +47,26 @@ services:
         tags:
             - { name: kernel.event_subscriber }
 
-    ###########################
-    # FEATURE SUMMARY GENERATOR #
-    ###########################
-    App\FeatureSummary\OpenRouterFeatureSummaryGenerator:
+    #####################
+    # SUMMARY GENERATION #
+    #####################
+    App\SummaryGeneration\Contract\SummaryGenerator:
+        alias: App\SummaryGeneration\Generator\OpenRouterSummaryGenerator
+
+    App\SummaryGeneration\Generator\OpenRouterSummaryGenerator:
         arguments:
             $apiKey: '%env(OPENROUTER_API_KEY)%'
-            $model: '%env(FEATURE_SUMMARY_MODEL)%'
-            $timeout: '%env(int:FEATURE_SUMMARY_TIMEOUT)%'
-            $projectContextMaxChars: '%env(int:FEATURE_SUMMARY_PROJECT_CONTEXT_MAX_CHARS)%'
-            $projectFeatureMaxChars: '%env(int:FEATURE_SUMMARY_PROJECT_FEATURE_MAX_CHARS)%'
+            $model: '%env(SUMMARY_GENERATION_MODEL)%'
+            $timeout: '%env(int:SUMMARY_GENERATION_TIMEOUT)%'
+
+    App\SummaryGeneration\Updater\FeatureSummaryUpdater:
+        tags:
+            - { name: app.summary_updater }
+
+    App\SummaryGeneration\Updater\PathSummaryUpdater:
+        tags:
+            - { name: app.summary_updater }
+
+    App\SummaryGeneration\EventSubscriber\SummaryGenerationSubscriber:
+        arguments:
+            $updaters: !tagged_iterator app.summary_updater

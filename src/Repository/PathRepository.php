@@ -80,4 +80,15 @@ SQL;
         $this->_em->persist($path);
         $this->_em->flush();
     }
+
+    public function updateSummary(string $pathId, string $summary): void
+    {
+        $this->_em->getConnection()->executeStatement(
+            'UPDATE path SET summary = :summary WHERE id = :id',
+            [
+                'summary' => $summary,
+                'id' => $pathId
+            ]
+        );
+    }
 }

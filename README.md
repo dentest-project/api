@@ -9,12 +9,11 @@ docker-compose up --build
 
 Access the API at http://localhost:8000
 
-## Feature summaries (OpenRouter)
+## Summary generation (OpenRouter)
 
-Feature summaries are generated after saving features. This runs on `kernel.terminate` so the save response isn't blocked.
+Feature and path summaries are generated after write operations. Feature summaries refresh when a feature moves from `draft` to `ready_to_dev`, and path summaries refresh whenever the set of `live` features changes in a path subtree. This runs on `kernel.terminate` so the save response isn't blocked.
 
 Steps:
 - Set `OPENROUTER_API_KEY` in `.env.local`.
-- The default model is `openrouter/free`, which lets OpenRouter choose a currently available free model.
-- Optionally override `FEATURE_SUMMARY_MODEL` if you want to pin a specific `:free` model.
+- Optionally override `SUMMARY_GENERATION_MODEL` if you want to pin a different model.
 - No extra Docker service is required.

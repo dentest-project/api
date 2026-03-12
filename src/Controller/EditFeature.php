@@ -3,10 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\Feature;
-use App\FeatureSummary\FeatureSummaryQueue;
 use App\Repository\FeatureRepository;
 use App\Security\Voter\Verb;
 use App\Serializer\Groups;
+use App\SummaryGeneration\Queue\SummaryUpdateScheduler;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
@@ -21,7 +21,7 @@ class EditFeature extends Api
 {
     public function __construct(
         private readonly FeatureRepository $featureRepository,
-        private readonly FeatureSummaryQueue $featureSummaryQueue
+        private readonly SummaryUpdateScheduler $summaryUpdateScheduler
     ) {}
 
     public function __invoke(#[EntityArgument] Feature $feature): Response
@@ -31,14 +31,10 @@ class EditFeature extends Api
         $this->validate($feature);
 
         $previousStatus = $feature->id ? $this->featureRepository->findStatusById($feature->id) : null;
-        $shouldGenerateSummary = $previousStatus === Feature::FEATURE_STATUS_DRAFT
-            && $feature->status === Feature::FEATURE_STATUS_READY_TO_DEV;
 
         try {
             $this->featureRepository->save($feature);
-            if ($shouldGenerateSummary && $feature->id !== null) {
-                $this->featureSummaryQueue->enqueue($feature->id);
-            }
+            $this->summaryUpdateScheduler->scheduleFeatureUpdates($feature, $previousStatus);
 
             return $this->buildSerializedResponse($feature, Groups::ReadFeature);
         } catch (ORMException | OptimisticLockException $e) {
