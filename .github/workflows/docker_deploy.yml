@@ -20,7 +20,7 @@ jobs:
           CR_PAT: ${{ secrets.READ_PACKAGES_REGISTRY_TOKEN }}
           MAILER_DSN: ${{ secrets.PROD_MAILER_DSN }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          SUMMARY_GENERATION_MODEL: "stepfun/step-3.5-flash"
+          SUMMARY_GENERATION_MODEL: "stepfun/step-3.5-flash:free"
         run: |
           echo "Adding deployer agent identity"
           eval `ssh-agent -s`
