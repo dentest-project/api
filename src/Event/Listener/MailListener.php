@@ -3,6 +3,7 @@
 namespace App\Event\Listener;
 
 use App\Event\MailEvent;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 
@@ -15,6 +16,7 @@ readonly class MailListener
     /**
      * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
      */
+    #[AsEventListener(event: 'app.mail')]
     public function sendMail(MailEvent $event): void
     {
         $email = (new Email())

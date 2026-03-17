@@ -1,9 +1,8 @@
 <?php
 
-namespace App\SummaryGeneration\Generator;
+namespace App\SummaryGeneration\SummaryGenerator;
 
-use App\SummaryGeneration\Contract\SummaryGenerator;
-use App\SummaryGeneration\Request\SummaryRequest;
+use App\SummaryGeneration\SummaryRequest\SummaryRequest;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\SummaryGeneration\Formatter;
+namespace App\SummaryGeneration\SummaryFormatter;
 
 use App\Entity\Feature;
 use App\Entity\Scenario;

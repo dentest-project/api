@@ -6,7 +6,7 @@ use App\Entity\Feature;
 use App\Repository\FeatureRepository;
 use App\Security\Voter\Verb;
 use App\Serializer\Groups;
-use App\SummaryGeneration\Queue\SummaryUpdateScheduler;
+use App\SummaryGeneration\SummaryQueuing\SummaryUpdateScheduler;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;

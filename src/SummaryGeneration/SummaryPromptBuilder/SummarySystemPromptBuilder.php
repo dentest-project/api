@@ -1,6 +1,6 @@
 <?php
 
-namespace App\SummaryGeneration\Prompt;
+namespace App\SummaryGeneration\SummaryPromptBuilder;
 
 class SummarySystemPromptBuilder
 {

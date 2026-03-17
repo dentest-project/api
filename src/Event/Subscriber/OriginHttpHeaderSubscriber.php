@@ -2,6 +2,7 @@
 
 namespace App\Event\Subscriber;
 
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,6 +13,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 readonly class OriginHttpHeaderSubscriber implements EventSubscriberInterface
 {
     public function __construct(
+        #[Autowire('%env(ALLOWED_ORIGIN)%')]
         private string $allowedOrigins
     ) {}
 

@@ -1,15 +1,14 @@
 <?php
 
-namespace App\SummaryGeneration\Updater;
+namespace App\SummaryGeneration\SummaryUpdater;
 
 use App\Entity\Feature;
 use App\Repository\FeatureRepository;
 use App\Repository\ProjectRepository;
-use App\SummaryGeneration\Contract\SummaryGenerator;
-use App\SummaryGeneration\Contract\SummaryUpdater;
-use App\SummaryGeneration\Queue\SummaryTarget;
-use App\SummaryGeneration\Queue\SummaryUpdate;
-use App\SummaryGeneration\Request\FeatureSummaryRequestBuilder;
+use App\SummaryGeneration\SummaryGenerator\SummaryGenerator;
+use App\SummaryGeneration\SummaryQueuing\SummaryTarget;
+use App\SummaryGeneration\SummaryQueuing\SummaryUpdate;
+use App\SummaryGeneration\SummaryRequest\FeatureSummaryRequestBuilder;
 use Throwable;
 
 readonly class FeatureSummaryUpdater implements SummaryUpdater

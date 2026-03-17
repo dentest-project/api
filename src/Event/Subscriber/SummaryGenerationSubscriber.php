@@ -1,10 +1,11 @@
 <?php
 
-namespace App\SummaryGeneration\EventSubscriber;
+namespace App\Event\Subscriber;
 
-use App\SummaryGeneration\Contract\SummaryUpdater;
-use App\SummaryGeneration\Queue\SummaryUpdateQueue;
+use App\SummaryGeneration\SummaryQueuing\SummaryUpdateQueue;
+use App\SummaryGeneration\SummaryUpdater\SummaryUpdater;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Throwable;
@@ -16,6 +17,7 @@ readonly class SummaryGenerationSubscriber implements EventSubscriberInterface
      */
     public function __construct(
         private SummaryUpdateQueue $summaryUpdateQueue,
+        #[TaggedIterator('app.summary_updater')]
         private iterable $updaters,
         private LoggerInterface $logger
     ) {}

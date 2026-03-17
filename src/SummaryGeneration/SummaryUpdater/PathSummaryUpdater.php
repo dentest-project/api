@@ -1,16 +1,15 @@
 <?php
 
-namespace App\SummaryGeneration\Updater;
+namespace App\SummaryGeneration\SummaryUpdater;
 
 use App\Entity\Feature;
 use App\Entity\Path;
 use App\Repository\FeatureRepository;
 use App\Repository\PathRepository;
-use App\SummaryGeneration\Contract\SummaryGenerator;
-use App\SummaryGeneration\Contract\SummaryUpdater;
-use App\SummaryGeneration\Queue\SummaryTarget;
-use App\SummaryGeneration\Queue\SummaryUpdate;
-use App\SummaryGeneration\Request\PathSummaryRequestBuilder;
+use App\SummaryGeneration\SummaryGenerator\SummaryGenerator;
+use App\SummaryGeneration\SummaryQueuing\SummaryTarget;
+use App\SummaryGeneration\SummaryQueuing\SummaryUpdate;
+use App\SummaryGeneration\SummaryRequest\PathSummaryRequestBuilder;
 
 readonly class PathSummaryUpdater implements SummaryUpdater
 {

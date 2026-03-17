@@ -1,6 +1,6 @@
 <?php
 
-namespace App\SummaryGeneration\Queue;
+namespace App\SummaryGeneration\SummaryQueuing;
 
 readonly class SummaryUpdate
 {

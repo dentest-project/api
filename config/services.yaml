@@ -31,42 +31,11 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    #############
-    # LISTENERS #
-    #############
-    App\Event\Listener\MailListener:
-        tags:
-            - { name: kernel.event_listener, event: app.mail, method: sendMail }
-
-    ###############
-    # SUBSCRIBERS #
-    ###############
-    App\Event\Subscriber\OriginHttpHeaderSubscriber:
-        arguments:
-            - "%env(ALLOWED_ORIGIN)%"
-        tags:
-            - { name: kernel.event_subscriber }
-
     #####################
     # SUMMARY GENERATION #
     #####################
-    App\SummaryGeneration\Contract\SummaryGenerator:
-        alias: App\SummaryGeneration\Generator\OpenRouterSummaryGenerator
-
-    App\SummaryGeneration\Generator\OpenRouterSummaryGenerator:
+    App\SummaryGeneration\SummaryGenerator\OpenRouterSummaryGenerator:
         arguments:
             $apiKey: '%env(OPENROUTER_API_KEY)%'
             $model: '%env(SUMMARY_GENERATION_MODEL)%'
             $timeout: '%env(int:SUMMARY_GENERATION_TIMEOUT)%'
-
-    App\SummaryGeneration\Updater\FeatureSummaryUpdater:
-        tags:
-            - { name: app.summary_updater }
-
-    App\SummaryGeneration\Updater\PathSummaryUpdater:
-        tags:
-            - { name: app.summary_updater }
-
-    App\SummaryGeneration\EventSubscriber\SummaryGenerationSubscriber:
-        arguments:
-            $updaters: !tagged_iterator app.summary_updater

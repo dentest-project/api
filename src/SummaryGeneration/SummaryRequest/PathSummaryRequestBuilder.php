@@ -1,11 +1,11 @@
 <?php
 
-namespace App\SummaryGeneration\Request;
+namespace App\SummaryGeneration\SummaryRequest;
 
 use App\Entity\Feature;
 use App\Entity\Path;
-use App\SummaryGeneration\Formatter\FeatureTextFormatter;
-use App\SummaryGeneration\Prompt\SummarySystemPromptBuilder;
+use App\SummaryGeneration\SummaryFormatter\FeatureTextFormatter;
+use App\SummaryGeneration\SummaryPromptBuilder\SummarySystemPromptBuilder;
 
 readonly class PathSummaryRequestBuilder
 {

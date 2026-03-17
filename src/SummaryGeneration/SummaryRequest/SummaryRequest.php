@@ -1,6 +1,6 @@
 <?php
 
-namespace App\SummaryGeneration\Request;
+namespace App\SummaryGeneration\SummaryRequest;
 
 readonly class SummaryRequest
 {
