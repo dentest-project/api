@@ -15,5 +15,7 @@ Feature and path summaries are generated after write operations. Feature summari
 
 Steps:
 - Set `OPENROUTER_API_KEY` in `.env.local`.
-- Optionally override `SUMMARY_GENERATION_MODEL` if you want to pin a different model.
+- Set `SUMMARY_GENERATION_MODEL`. `openrouter/free` is fine for development, but production should set an explicit model so summary quality stays predictable.
+- Optionally set `SUMMARY_GENERATION_FALLBACK_MODELS` to a comma-separated list of fallback models.
+- Tune `SUMMARY_GENERATION_MAX_RETRIES`, `SUMMARY_GENERATION_RETRY_DELAY_MS`, and `SUMMARY_GENERATION_MAX_RETRY_DELAY_MS` if you want the API to retry temporary `429` and `5xx` responses.
 - No extra Docker service is required.

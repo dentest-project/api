@@ -16,14 +16,27 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
 
     private HttpClientInterface $client;
     private bool $enabled;
+    /** @var string[] */
+    private array $fallbackModels;
+    private int $maxRetries;
+    private int $retryDelayMs;
+    private int $maxRetryDelayMs;
 
     public function __construct(
         private LoggerInterface $logger,
         private string $model,
         string $apiKey,
-        int $timeout
+        int $timeout,
+        string $fallbackModels,
+        int $maxRetries,
+        int $retryDelayMs,
+        int $maxRetryDelayMs
     ) {
         $this->enabled = $apiKey !== '' && $this->model !== '';
+        $this->fallbackModels = $this->normalizeFallbackModels($fallbackModels);
+        $this->maxRetries = max(0, $maxRetries);
+        $this->retryDelayMs = max(0, $retryDelayMs);
+        $this->maxRetryDelayMs = max($this->retryDelayMs, $maxRetryDelayMs);
 
         if (!$this->enabled) {
             $this->logger->error('Summary generation is missing configuration.', [
@@ -47,6 +60,8 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
 
     public function generate(SummaryRequest $request): ?string
     {
+        static $rateLimitedUntil = 0.0;
+
         $logContext = $this->buildLogContext($request);
 
         if (!$this->enabled || $request->systemPrompt === '' || $request->userPrompt === '') {
@@ -62,84 +77,160 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
             return null;
         }
 
-        try {
-            $payload = [
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => $request->systemPrompt
+        $now = microtime(true);
+        if ($rateLimitedUntil > $now) {
+            $remainingDelayMs = max(0, (int) ceil(($rateLimitedUntil - $now) * 1000));
+
+            $this->logger->warning('Summary generation skipped because the OpenRouter cooldown is active.', array_merge($logContext, [
+                'failure' => [
+                    'reason' => 'rate_limit_cooldown',
+                    'retryInMs' => $remainingDelayMs
+                ]
+            ]));
+
+            return null;
+        }
+
+        $payload = [
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => $request->systemPrompt
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $request->userPrompt
+                ]
+            ],
+            'model' => $this->model
+        ];
+        if (count($this->fallbackModels) > 0) {
+            $payload['models'] = $this->fallbackModels;
+        }
+
+        $responsePayload = null;
+        $summary = null;
+        $statusCode = 0;
+        $responseModel = null;
+        $attemptCount = 0;
+
+        for ($attempt = 0; $attempt <= $this->maxRetries; $attempt++) {
+            $attemptCount = $attempt + 1;
+
+            try {
+                $response = $this->client->request('POST', self::CHAT_COMPLETIONS_PATH, [
+                    'json' => $payload
+                ]);
+                $statusCode = (int) ($response->getInfo('http_code') ?? 0);
+                $headers = $response->getHeaders(false);
+                $rawBody = $response->getContent(false);
+            } catch (Throwable $exception) {
+                $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                    'failure' => [
+                        'reason' => 'request_exception',
+                        'attempt' => $attemptCount,
+                        'message' => $exception->getMessage()
                     ],
-                    [
-                        'role' => 'user',
-                        'content' => $request->userPrompt
+                    'exception' => $exception
+                ]));
+
+                return null;
+            }
+
+            if ($this->isRetryableStatusCode($statusCode) && $attempt < $this->maxRetries) {
+                $delayMs = $this->resolveRetryDelayMs($headers, $attempt);
+
+                $this->logger->warning('Summary generation hit a retryable OpenRouter error and will be retried.', array_merge($logContext, [
+                    'failure' => [
+                        'reason' => $statusCode === 429 ? 'rate_limited' : 'upstream_error',
+                        'statusCode' => $statusCode,
+                        'responseBody' => $rawBody,
+                        'attempt' => $attemptCount,
+                        'retryInMs' => $delayMs
                     ]
-                ],
-                'model' => $this->model
-            ];
+                ]));
 
-            $response = $this->client->request('POST', self::CHAT_COMPLETIONS_PATH, [
-                'json' => $payload
-            ]);
-            $statusCode = (int) ($response->getInfo('http_code') ?? 0);
-            $rawBody = $response->getContent(false);
-        } catch (Throwable $exception) {
-            $this->logger->error('Summary generation failed.', array_merge($logContext, [
-                'failure' => [
-                    'reason' => 'request_exception',
-                    'message' => $exception->getMessage()
-                ],
-                'exception' => $exception
-            ]));
+                if ($delayMs > 0) {
+                    usleep($delayMs * 1000);
+                }
 
-            return null;
-        }
+                continue;
+            }
 
-        if ($statusCode >= 400) {
-            $this->logger->error('Summary generation failed.', array_merge($logContext, [
-                'failure' => [
-                    'reason' => 'http_error',
+            if ($statusCode >= 400) {
+                $failureContext = [
+                    'reason' => $statusCode === 429 ? 'rate_limited' : 'http_error',
                     'statusCode' => $statusCode,
-                    'responseBody' => $rawBody
-                ]
-            ]));
-
-            return null;
-        }
-
-        try {
-            $responsePayload = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
-        } catch (Throwable $exception) {
-            $this->logger->error('Summary generation failed.', array_merge($logContext, [
-                'failure' => [
-                    'reason' => 'invalid_json',
                     'responseBody' => $rawBody,
-                    'message' => $exception->getMessage()
-                ],
-                'exception' => $exception
-            ]));
+                    'attempt' => $attemptCount
+                ];
 
-            return null;
+                if ($statusCode === 429) {
+                    $cooldownMs = $this->resolveRetryDelayMs($headers, $attempt);
+                    if ($cooldownMs > 0) {
+                        $rateLimitedUntil = microtime(true) + ($cooldownMs / 1000);
+                        $failureContext['retryInMs'] = $cooldownMs;
+                    }
+                }
+
+                $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                    'failure' => $failureContext
+                ]));
+
+                return null;
+            }
+
+            try {
+                $responsePayload = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
+            } catch (Throwable $exception) {
+                $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                    'failure' => [
+                        'reason' => 'invalid_json',
+                        'responseBody' => $rawBody,
+                        'attempt' => $attemptCount,
+                        'message' => $exception->getMessage()
+                    ],
+                    'exception' => $exception
+                ]));
+
+                return null;
+            }
+
+            if (!is_array($responsePayload)) {
+                $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                    'failure' => [
+                        'reason' => 'unexpected_payload_type',
+                        'payloadType' => get_debug_type($responsePayload),
+                        'responseBody' => $rawBody,
+                        'attempt' => $attemptCount
+                    ]
+                ]));
+
+                return null;
+            }
+
+            $summary = trim($this->extractSummary($responsePayload));
+            $responseModel = is_string($responsePayload['model'] ?? null) ? $responsePayload['model'] : null;
+            break;
         }
 
-        if (!is_array($responsePayload)) {
+        if ($summary === null) {
             $this->logger->error('Summary generation failed.', array_merge($logContext, [
                 'failure' => [
-                    'reason' => 'unexpected_payload_type',
-                    'payloadType' => get_debug_type($responsePayload),
-                    'responseBody' => $rawBody
+                    'reason' => 'no_response_after_retries',
+                    'attempts' => $attemptCount
                 ]
             ]));
 
             return null;
         }
-
-        $summary = trim($this->extractSummary($responsePayload));
 
         if ($summary === '') {
             $this->logger->error('Summary generation failed.', array_merge($logContext, [
                 'failure' => [
                     'reason' => 'empty_summary',
-                    'responseBody' => $rawBody
+                    'responseBody' => json_encode($responsePayload),
+                    'attempts' => $attemptCount
                 ]
             ]));
 
@@ -148,6 +239,8 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
 
         $this->logger->info('Summary generated.', array_merge($logContext, [
             'httpStatus' => $statusCode,
+            'attempts' => $attemptCount,
+            'responseModel' => $responseModel,
             'output' => $summary
         ]));
 
@@ -218,6 +311,61 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
     }
 
     /**
+     * @return string[]
+     */
+    private function normalizeFallbackModels(string $fallbackModels): array
+    {
+        $models = array_filter(array_map(
+            static fn (string $model): string => trim($model),
+            explode(',', $fallbackModels)
+        ));
+
+        return array_values(array_unique(array_filter($models, fn (string $model): bool => $model !== '' && $model !== $this->model)));
+    }
+
+    private function isRetryableStatusCode(int $statusCode): bool
+    {
+        return $statusCode === 429 || $statusCode >= 500;
+    }
+
+    /**
+     * @param array<string, array<int, string>> $headers
+     */
+    private function resolveRetryDelayMs(array $headers, int $attempt): int
+    {
+        $retryAfterSeconds = $this->extractRetryAfterSeconds($headers);
+        if ($retryAfterSeconds !== null) {
+            return min((int) ceil($retryAfterSeconds * 1000), $this->maxRetryDelayMs);
+        }
+
+        $exponentialDelay = $this->retryDelayMs * (2 ** $attempt);
+
+        return min($exponentialDelay, $this->maxRetryDelayMs);
+    }
+
+    /**
+     * @param array<string, array<int, string>> $headers
+     */
+    private function extractRetryAfterSeconds(array $headers): ?float
+    {
+        $retryAfter = $headers['retry-after'][0] ?? null;
+        if (!is_string($retryAfter) || trim($retryAfter) === '') {
+            return null;
+        }
+
+        if (is_numeric($retryAfter)) {
+            return max(0.0, (float) $retryAfter);
+        }
+
+        $timestamp = strtotime($retryAfter);
+        if ($timestamp === false) {
+            return null;
+        }
+
+        return max(0.0, $timestamp - time());
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function buildLogContext(SummaryRequest $request): array
@@ -225,6 +373,7 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
         return array_merge($request->context->toLogContext(), [
             'provider' => 'openrouter',
             'model' => $this->model,
+            'fallbackModels' => $this->fallbackModels,
             'prompt' => [
                 'system' => $request->systemPrompt,
                 'user' => $request->userPrompt

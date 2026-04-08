@@ -20,7 +20,11 @@ jobs:
           CR_PAT: ${{ secrets.READ_PACKAGES_REGISTRY_TOKEN }}
           MAILER_DSN: ${{ secrets.PROD_MAILER_DSN }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          SUMMARY_GENERATION_MODEL: "google/gemma-4-26b-a4b-it:free"
+          SUMMARY_GENERATION_MODEL: "qwen/qwen3-next-80b-a3b-instruct:free"
+          SUMMARY_GENERATION_FALLBACK_MODELS: "meta-llama/llama-3.3-70b-instruct:free,minimax/minimax-m2.5:free,nvidia/nemotron-3-super-120b-a12b:free"
+          SUMMARY_GENERATION_MAX_RETRIES: "2"
+          SUMMARY_GENERATION_RETRY_DELAY_MS: "1500"
+          SUMMARY_GENERATION_MAX_RETRY_DELAY_MS: "10000"
         run: |
           echo "Adding deployer agent identity"
           eval `ssh-agent -s`
@@ -32,4 +36,4 @@ jobs:
           echo "Logging Docker in Github package registry"
           ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "echo $CR_PAT | docker login ghcr.io -u $ACTOR --password-stdin"
           echo "Running container"
-          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && ALLOWED_ORIGIN=https://dentest.tech OPENROUTER_API_KEY=$OPENROUTER_API_KEY SUMMARY_GENERATION_MODEL=$SUMMARY_GENERATION_MODEL SUMMARY_GENERATION_TIMEOUT=300 COMPOSE_PROJECT_NAME=dentest_api HTTP_PORT=8002 JWT_CERTS=/var/www/dockerized-dentest-api/jwt POSTGRES_DATA=/var/www/dockerized-dentest-api/data MAILER_DSN=$MAILER_DSN SERVER_NAME=http://127.0.0.1 docker compose -f ./installer/prod/docker-compose.yml up -d --remove-orphans --build --no-deps main caddy"
+          ssh -o StrictHostKeyChecking=no deployer-agent@$DEPLOY_TO "cd $DEPLOY_DIR && ALLOWED_ORIGIN=https://dentest.tech OPENROUTER_API_KEY=$OPENROUTER_API_KEY SUMMARY_GENERATION_MODEL=$SUMMARY_GENERATION_MODEL SUMMARY_GENERATION_FALLBACK_MODELS=$SUMMARY_GENERATION_FALLBACK_MODELS SUMMARY_GENERATION_TIMEOUT=300 SUMMARY_GENERATION_MAX_RETRIES=$SUMMARY_GENERATION_MAX_RETRIES SUMMARY_GENERATION_RETRY_DELAY_MS=$SUMMARY_GENERATION_RETRY_DELAY_MS SUMMARY_GENERATION_MAX_RETRY_DELAY_MS=$SUMMARY_GENERATION_MAX_RETRY_DELAY_MS COMPOSE_PROJECT_NAME=dentest_api HTTP_PORT=8002 JWT_CERTS=/var/www/dockerized-dentest-api/jwt POSTGRES_DATA=/var/www/dockerized-dentest-api/data MAILER_DSN=$MAILER_DSN SERVER_NAME=http://127.0.0.1 docker compose -f ./installer/prod/docker-compose.yml up -d --remove-orphans --build --no-deps main caddy"

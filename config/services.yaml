@@ -40,6 +40,10 @@ services:
             $apiKey: '%env(OPENROUTER_API_KEY)%'
             $model: '%env(SUMMARY_GENERATION_MODEL)%'
             $timeout: '%env(int:SUMMARY_GENERATION_TIMEOUT)%'
+            $fallbackModels: '%env(SUMMARY_GENERATION_FALLBACK_MODELS)%'
+            $maxRetries: '%env(int:SUMMARY_GENERATION_MAX_RETRIES)%'
+            $retryDelayMs: '%env(int:SUMMARY_GENERATION_RETRY_DELAY_MS)%'
+            $maxRetryDelayMs: '%env(int:SUMMARY_GENERATION_MAX_RETRY_DELAY_MS)%'
 
     App\SummaryGeneration\SummaryUpdater\FeatureSummaryUpdater:
         arguments:
