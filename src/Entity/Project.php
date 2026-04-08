@@ -86,6 +86,12 @@ class Project
     #[ORM\OneToMany(mappedBy: 'project', targetEntity: Step::class, cascade: ['all'], orphanRemoval: true)]
     public iterable $steps = [];
 
+    #[Serializer\Groups([Groups::ReadDomainModel->value])]
+    #[Serializer\SerializedName('entities')]
+    #[ORM\OneToMany(mappedBy: 'project', targetEntity: DomainEntity::class, cascade: ['all'], orphanRemoval: true)]
+    #[ORM\OrderBy(['name' => 'ASC'])]
+    public iterable $domainEntities = [];
+
     #[ORM\PrePersist]
     public function prePersist(): void
     {
