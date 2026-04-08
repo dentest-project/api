@@ -10,3 +10,8 @@ monolog:
             type: stream
             path: "%kernel.logs_dir%/%kernel.environment%.log"
             level: debug
+        summary_generation:
+            type: stream
+            path: "%kernel.logs_dir%/summary_generation_%kernel.environment%.log"
+            level: info
+            channels: ["summary_generation"]

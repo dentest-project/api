@@ -49,7 +49,12 @@ Edited feature:
 %s
 PROMPT,
                     $featureText
-                )
+                ),
+            new SummaryRequestContext(
+                'feature',
+                $feature->id,
+                $feature->getDisplayRootPath()
+            )
         );
     }
 

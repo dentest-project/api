@@ -36,6 +36,15 @@ services:
     #####################
     App\SummaryGeneration\SummaryGenerator\OpenRouterSummaryGenerator:
         arguments:
+            $logger: '@monolog.logger.summary_generation'
             $apiKey: '%env(OPENROUTER_API_KEY)%'
             $model: '%env(SUMMARY_GENERATION_MODEL)%'
             $timeout: '%env(int:SUMMARY_GENERATION_TIMEOUT)%'
+
+    App\SummaryGeneration\SummaryUpdater\FeatureSummaryUpdater:
+        arguments:
+            $summaryLogger: '@monolog.logger.summary_generation'
+
+    App\SummaryGeneration\SummaryUpdater\PathSummaryUpdater:
+        arguments:
+            $summaryLogger: '@monolog.logger.summary_generation'

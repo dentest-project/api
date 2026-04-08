@@ -44,6 +44,11 @@ Live features in this path and its subpaths:
 PROMPT,
                 $path->getDisplayPath(),
                 $featuresText
+            ),
+            new SummaryRequestContext(
+                'path',
+                $path->id,
+                $path->getDisplayPath()
             )
         );
     }

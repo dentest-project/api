@@ -6,6 +6,7 @@ readonly class SummaryRequest
 {
     public function __construct(
         public string $systemPrompt,
-        public string $userPrompt
+        public string $userPrompt,
+        public SummaryRequestContext $context
     ) {}
 }

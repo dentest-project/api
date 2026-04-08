@@ -9,6 +9,7 @@ use App\SummaryGeneration\SummaryGenerator\SummaryGenerator;
 use App\SummaryGeneration\SummaryQueuing\SummaryTarget;
 use App\SummaryGeneration\SummaryQueuing\SummaryUpdate;
 use App\SummaryGeneration\SummaryRequest\FeatureSummaryRequestBuilder;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 readonly class FeatureSummaryUpdater implements SummaryUpdater
@@ -17,7 +18,8 @@ readonly class FeatureSummaryUpdater implements SummaryUpdater
         private FeatureRepository $featureRepository,
         private ProjectRepository $projectRepository,
         private FeatureSummaryRequestBuilder $featureSummaryRequestBuilder,
-        private SummaryGenerator $summaryGenerator
+        private SummaryGenerator $summaryGenerator,
+        private LoggerInterface $summaryLogger
     ) {}
 
     public function supports(SummaryTarget $target): bool
@@ -55,6 +57,22 @@ readonly class FeatureSummaryUpdater implements SummaryUpdater
             return;
         }
 
-        $this->featureRepository->updateSummary($feature->id, $summary);
+        try {
+            $this->featureRepository->updateSummary($feature->id, $summary);
+        } catch (Throwable $exception) {
+            $this->summaryLogger->error('Failed to persist generated summary.', array_merge(
+                $summaryRequest->context->toLogContext(),
+                [
+                    'prompt' => [
+                        'system' => $summaryRequest->systemPrompt,
+                        'user' => $summaryRequest->userPrompt
+                    ],
+                    'output' => $summary,
+                    'exception' => $exception
+                ]
+            ));
+
+            throw $exception;
+        }
     }
 }

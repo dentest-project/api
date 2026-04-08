@@ -47,7 +47,18 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
 
     public function generate(SummaryRequest $request): ?string
     {
+        $logContext = $this->buildLogContext($request);
+
         if (!$this->enabled || $request->systemPrompt === '' || $request->userPrompt === '') {
+            $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                'failure' => [
+                    'reason' => !$this->enabled ? 'missing_configuration' : 'missing_prompt',
+                    'enabled' => $this->enabled,
+                    'systemPromptProvided' => $request->systemPrompt !== '',
+                    'userPromptProvided' => $request->userPrompt !== ''
+                ]
+            ]));
+
             return null;
         }
 
@@ -72,18 +83,25 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
             $statusCode = (int) ($response->getInfo('http_code') ?? 0);
             $rawBody = $response->getContent(false);
         } catch (Throwable $exception) {
-            $this->logger->error('Failed to generate summary.', [
+            $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                'failure' => [
+                    'reason' => 'request_exception',
+                    'message' => $exception->getMessage()
+                ],
                 'exception' => $exception
-            ]);
+            ]));
 
             return null;
         }
 
         if ($statusCode >= 400) {
-            $this->logger->error('Summary request failed.', [
-                'statusCode' => $statusCode,
-                'body' => $rawBody
-            ]);
+            $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                'failure' => [
+                    'reason' => 'http_error',
+                    'statusCode' => $statusCode,
+                    'responseBody' => $rawBody
+                ]
+            ]));
 
             return null;
         }
@@ -91,23 +109,49 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
         try {
             $responsePayload = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
         } catch (Throwable $exception) {
-            $this->logger->error('Summary response was not valid JSON.', [
-                'exception' => $exception,
-                'body' => $rawBody
-            ]);
+            $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                'failure' => [
+                    'reason' => 'invalid_json',
+                    'responseBody' => $rawBody,
+                    'message' => $exception->getMessage()
+                ],
+                'exception' => $exception
+            ]));
 
             return null;
         }
 
         if (!is_array($responsePayload)) {
-            $this->logger->error('Summary response was not an array.');
+            $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                'failure' => [
+                    'reason' => 'unexpected_payload_type',
+                    'payloadType' => get_debug_type($responsePayload),
+                    'responseBody' => $rawBody
+                ]
+            ]));
 
             return null;
         }
 
         $summary = trim($this->extractSummary($responsePayload));
 
-        return $summary !== '' ? $summary : null;
+        if ($summary === '') {
+            $this->logger->error('Summary generation failed.', array_merge($logContext, [
+                'failure' => [
+                    'reason' => 'empty_summary',
+                    'responseBody' => $rawBody
+                ]
+            ]));
+
+            return null;
+        }
+
+        $this->logger->info('Summary generated.', array_merge($logContext, [
+            'httpStatus' => $statusCode,
+            'output' => $summary
+        ]));
+
+        return $summary;
     }
 
     private function extractSummary(array $payload): string
@@ -171,5 +215,20 @@ readonly class OpenRouterSummaryGenerator implements SummaryGenerator
         }
 
         return implode('', $parts);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildLogContext(SummaryRequest $request): array
+    {
+        return array_merge($request->context->toLogContext(), [
+            'provider' => 'openrouter',
+            'model' => $this->model,
+            'prompt' => [
+                'system' => $request->systemPrompt,
+                'user' => $request->userPrompt
+            ]
+        ]);
     }
 }

@@ -10,6 +10,8 @@ use App\SummaryGeneration\SummaryGenerator\SummaryGenerator;
 use App\SummaryGeneration\SummaryQueuing\SummaryTarget;
 use App\SummaryGeneration\SummaryQueuing\SummaryUpdate;
 use App\SummaryGeneration\SummaryRequest\PathSummaryRequestBuilder;
+use Psr\Log\LoggerInterface;
+use Throwable;
 
 readonly class PathSummaryUpdater implements SummaryUpdater
 {
@@ -17,7 +19,8 @@ readonly class PathSummaryUpdater implements SummaryUpdater
         private PathRepository $pathRepository,
         private FeatureRepository $featureRepository,
         private PathSummaryRequestBuilder $pathSummaryRequestBuilder,
-        private SummaryGenerator $summaryGenerator
+        private SummaryGenerator $summaryGenerator,
+        private LoggerInterface $summaryLogger
     ) {}
 
     public function supports(SummaryTarget $target): bool
@@ -54,6 +57,22 @@ readonly class PathSummaryUpdater implements SummaryUpdater
             return;
         }
 
-        $this->pathRepository->updateSummary($path->id, $summary);
+        try {
+            $this->pathRepository->updateSummary($path->id, $summary);
+        } catch (Throwable $exception) {
+            $this->summaryLogger->error('Failed to persist generated summary.', array_merge(
+                $summaryRequest->context->toLogContext(),
+                [
+                    'prompt' => [
+                        'system' => $summaryRequest->systemPrompt,
+                        'user' => $summaryRequest->userPrompt
+                    ],
+                    'output' => $summary,
+                    'exception' => $exception
+                ]
+            ));
+
+            throw $exception;
+        }
     }
 }
