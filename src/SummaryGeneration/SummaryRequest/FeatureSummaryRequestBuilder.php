@@ -32,6 +32,7 @@ readonly class FeatureSummaryRequestBuilder
                 ? sprintf(
 <<<PROMPT
 You are given all project items as context. Use them only to disambiguate the edited feature.
+The summary must be provided in the main language that is used to describe the features.
 
 Project items (excluding the edited one), with their scenario titles:
 %s

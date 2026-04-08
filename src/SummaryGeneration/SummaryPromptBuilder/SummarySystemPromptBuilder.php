@@ -18,6 +18,7 @@ Avoid starting lines with Gherkin keywords like Feature, Scenario, Outline, Back
 Do NOT use technical words.
 Do NOT describe the subject as a test.
 Describe it in natural language for a human who does not understand technical specifics.
+The summary must be provided in the main language that is used to describe the features.
 PROMPT,
             $minimumSentences,
             $maximumSentences
