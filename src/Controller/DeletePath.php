@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/paths/{id}', requirements: ['id' => '[0-9a-z-]+'], methods: ['DELETE'])]
+#[Route('/paths/{id}', requirements: ['id' => '[0-9a-f-]+'], methods: ['DELETE'])]
 class DeletePath extends Api
 {
     public function __construct(

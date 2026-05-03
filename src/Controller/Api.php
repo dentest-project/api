@@ -11,7 +11,6 @@ use App\Serializer\Normalizer\PathNormalizer;
 use App\Serializer\Normalizer\ProjectNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -34,13 +33,6 @@ abstract class Api extends AbstractController
     protected SerializerInterface $serializer;
 
     protected ValidatorInterface $validator;
-
-    protected function getFromBody(string $property, Request $request)
-    {
-        $content = json_decode($request->getContent(), true);
-
-        return $content[$property] ?? null;
-    }
 
     protected function buildSerializedResponse($data, Groups $group = null, int $statusCode = Response::HTTP_OK): Response
     {

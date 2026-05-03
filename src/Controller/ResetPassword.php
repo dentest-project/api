@@ -7,7 +7,6 @@ use App\Mail\ResetPasswordMail;
 use App\Manager\UserManager;
 use App\Model\Request\ResetPasswordRequestModel;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
@@ -19,10 +18,8 @@ class ResetPassword extends Api
         private readonly UserManager $userManager
     ) {}
 
-    public function __invoke(Request $request): Response
+    public function __invoke(ResetPasswordRequestModel $model): Response
     {
-        /** @var ResetPasswordRequestModel $model */
-        $model = ResetPasswordRequestModel::fromRequest($request);
         $this->validate($model);
 
         try {

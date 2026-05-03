@@ -25,6 +25,9 @@ class PathRepository extends ServiceEntityRepository
         $this->_em->flush();
     }
 
+    /**
+     * @return string[]
+     */
     public function findFullSlugsByProject(Project $project): array
     {
         $query = <<<SQL

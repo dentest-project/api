@@ -8,7 +8,6 @@ use App\Security\Voter\Verb;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,7 +19,7 @@ class DeleteOrganizationUser extends Api
         private readonly OrganizationUserRepository $organizationUserRepository
     ) {}
 
-    public function __invoke(OrganizationUser $organizationUser, Request $request): Response
+    public function __invoke(OrganizationUser $organizationUser): Response
     {
         $this->denyAccessUnlessGranted(Verb::DELETE, $organizationUser);
 

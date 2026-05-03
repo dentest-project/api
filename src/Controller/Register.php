@@ -6,7 +6,7 @@ use App\Entity\User;
 use App\Exception\UserAlreadyExistsException;
 use App\Mail\RegisterMail;
 use App\Manager\UserManager;
-use RollandRock\ParamConverterBundle\Attribute\EntityArgument;
+use App\Model\Request\RegisterRequestModel;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\Routing\Attribute\Route;
@@ -18,9 +18,14 @@ class Register extends Api
         private readonly UserManager $userManager
     ) {}
 
-    public function __invoke(#[EntityArgument] User $user): Response
+    public function __invoke(RegisterRequestModel $model): Response
     {
-        $this->validate($user);
+        $this->validate($model);
+
+        $user = new User();
+        $user->username = $model->username;
+        $user->email = $model->email;
+        $user->password = $model->password;
 
         try {
             $this->userManager->register($user);

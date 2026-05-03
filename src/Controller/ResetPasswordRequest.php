@@ -5,8 +5,8 @@ namespace App\Controller;
 use App\Exception\UserNotFoundException;
 use App\Mail\ResetPasswordRequestMail;
 use App\Manager\UserManager;
+use App\Model\Request\ResetPasswordRequestEmailModel;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -17,10 +17,12 @@ class ResetPasswordRequest extends Api
         private readonly UserManager $userManager
     ) {}
 
-    public function __invoke(Request $request): Response
+    public function __invoke(ResetPasswordRequestEmailModel $model): Response
     {
+        $this->validate($model);
+
         try {
-            $user = $this->userManager->resetPasswordRequest($this->getFromBody('email', $request));
+            $user = $this->userManager->resetPasswordRequest($model->email);
 
             $this->sendMail($user->email, new ResetPasswordRequestMail(['link' => sprintf(
                 '%s/reset-password?code=%s',

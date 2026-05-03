@@ -2,12 +2,12 @@
 
 namespace App\Controller;
 
+use App\Model\Request\GetUsersQueryModel;
 use App\Repository\OrganizationRepository;
 use App\Repository\UserRepository;
 use App\Security\Voter\Verb;
 use App\Serializer\Groups;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,14 +20,14 @@ class GetUsers extends Api
         private readonly UserRepository $userRepository
     ) {}
 
-    public function __invoke(Request $request): Response
+    public function __invoke(GetUsersQueryModel $query): Response
     {
-        if (!$request->query->has('q')) {
+        if (null === $query->q) {
             return new JsonResponse([]);
         }
 
-        if ($request->query->has('organization')) {
-            $organization = $this->organizationRepository->findOneBy(['slug' => $request->query->get('organization')]);
+        if (null !== $query->organization) {
+            $organization = $this->organizationRepository->findOneBy(['slug' => $query->organization]);
 
             if (null === $organization) {
                 throw new NotFoundHttpException();
@@ -35,9 +35,9 @@ class GetUsers extends Api
 
             $this->denyAccessUnlessGranted(Verb::UPDATE, $organization);
 
-            $users = $this->userRepository->searchByOrganization($organization, $request->query->get('q'));
+            $users = $this->userRepository->searchByOrganization($organization, $query->q);
         } else {
-            $users = $this->userRepository->search($request->query->get('q'));
+            $users = $this->userRepository->search($query->q);
         }
 
         return $this->buildSerializedResponse($users, Groups::ListUsers);

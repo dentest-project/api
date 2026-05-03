@@ -9,7 +9,7 @@ use App\Serializer\Groups;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/projects/{id}/steps', requirements: ['id' => '[0-9a-z-]+'], methods: ['GET'])]
+#[Route('/projects/{id}/steps', requirements: ['id' => '[0-9a-f-]+'], methods: ['GET'])]
 class GetProjectSteps extends Api
 {
     public function __construct(

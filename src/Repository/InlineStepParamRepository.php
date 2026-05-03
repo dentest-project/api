@@ -16,6 +16,9 @@ class InlineStepParamRepository extends ServiceEntityRepository
         parent::__construct($registry, InlineStepParam::class);
     }
 
+    /**
+     * @return string[]
+     */
     public function findChoicesForStepPart(StepPart $part): array
     {
         $registeredValues = $this

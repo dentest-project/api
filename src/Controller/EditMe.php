@@ -7,7 +7,6 @@ use App\Exception\UserAlreadyExistsException;
 use App\Manager\UserManager;
 use App\Model\Request\UpdateMeRequestModel;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -22,7 +21,7 @@ class EditMe extends Api
         private readonly UserManager $userManager
     ) {}
 
-    public function __invoke(Request $request): Response
+    public function __invoke(UpdateMeRequestModel $model): Response
     {
         $user = $this->tokenStorage->getToken()->getUser();
 
@@ -30,8 +29,6 @@ class EditMe extends Api
             throw new UnauthorizedHttpException('Bearer');
         }
 
-        /** @var UpdateMeRequestModel $model */
-        $model = UpdateMeRequestModel::fromRequest($request);
         $this->validate($model);
 
         try {

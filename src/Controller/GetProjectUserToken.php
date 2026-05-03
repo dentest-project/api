@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\ProjectUser;
 use App\Manager\ProjectUserManager;
 use App\Security\Voter\Verb;
-use App\Serializer\Groups;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,7 +31,7 @@ class GetProjectUserToken extends Api
         }
 
         return $this->buildSerializedResponse([
-            'token' => $projectUser->token
-        ], Groups::ReadProjectUserToken);
+            'token' => $projectUser->token,
+        ]);
     }
 }

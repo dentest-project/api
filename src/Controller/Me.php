@@ -8,7 +8,7 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
-#[Route('//me', methods: ['GET'])]
+#[Route('/me', methods: ['GET'])]
 class Me extends Api
 {
     public function __construct(
@@ -24,7 +24,7 @@ class Me extends Api
         }
 
         return $this->buildSerializedResponse([
-            'user' => $user
+            'user' => $user,
         ]);
     }
 }

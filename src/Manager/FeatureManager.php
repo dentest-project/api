@@ -5,6 +5,7 @@ namespace App\Manager;
 use App\Entity\Feature;
 use App\Entity\Project;
 use App\Entity\Scenario;
+use App\Model\Response\PullFeatureResponse;
 use App\Repository\FeatureRepository;
 use App\Repository\ScenarioRepository;
 use App\Transformer\FeatureToStringTransformer;
@@ -19,6 +20,8 @@ readonly class FeatureManager
 
     /**
      * @throws \Doctrine\DBAL\Exception
+     *
+     * @return list<PullFeatureResponse>
      */
     public function pull(Project $project, string $inlineParameterWrapper, bool $withId): array
     {

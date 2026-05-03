@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\ProjectUser;
 use App\Manager\FeatureManager;
+use App\Model\Request\PullFeaturesQueryModel;
 use App\Repository\ProjectUserRepository;
 use App\Security\TokenExtractor\AuthorizationHeaderTokenExtractor;
 use App\Security\Voter\Verb;
@@ -12,10 +13,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
-
-/**
- * @Route("/pull/features", methods={"GET"}, requirements={"id": "[0-9a-z-]+"})
- */
 #[Route('/pull/features', methods: ['GET'])]
 class PullFeatures extends Api
 {
@@ -25,7 +22,7 @@ class PullFeatures extends Api
         private readonly ProjectUserRepository $projectUserRepository
     ) {}
 
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, PullFeaturesQueryModel $query): Response
     {
         $token = $this->tokenExtractor->extract($request);
         $projectUser = $this->projectUserRepository->findOneBy(['token' => $token]);
@@ -39,8 +36,8 @@ class PullFeatures extends Api
         return new JsonResponse(
             $this->featureManager->pull(
                 $projectUser->project,
-                $request->get('inlineParameterWrapper', ''),
-                $request->get('withId', false) === '1'
+                $query->inlineParameterWrapper,
+                $query->withId
             )
         );
     }

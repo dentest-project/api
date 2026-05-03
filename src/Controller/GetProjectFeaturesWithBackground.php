@@ -11,7 +11,7 @@ use App\Serializer\Groups;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/projects/{id}/features-with-backgrounds', requirements: ['id' => '[0-9a-z-]+'], methods: ['GET'])]
+#[Route('/projects/{id}/features-with-backgrounds', requirements: ['id' => '[0-9a-f-]+'], methods: ['GET'])]
 class GetProjectFeaturesWithBackground extends Api
 {
     public function __construct(

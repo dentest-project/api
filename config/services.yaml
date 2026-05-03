@@ -28,6 +28,14 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
+    App\ValueResolver\RequestModelValueResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 105 }
+
+    App\OpenApi\RouteDescriber\ControllerConventionDescriber:
+        tags:
+            - { name: nelmio_api_doc.route_describer, priority: -50 }
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 

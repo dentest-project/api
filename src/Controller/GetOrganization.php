@@ -7,7 +7,7 @@ use App\Serializer\Groups;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/organizations/{slug}', requirements: ['id' => '[0-9a-z-]+'], methods: ['GET'])]
+#[Route('/organizations/{slug}', requirements: ['slug' => '[0-9a-z-]+'], methods: ['GET'])]
 class GetOrganization extends Api
 {
     public function __invoke(Organization $organization): Response
