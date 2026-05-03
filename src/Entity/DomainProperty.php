@@ -8,7 +8,6 @@ use App\Entity\DataType\DomainPropertyType;
 use App\Serializer\Groups;
 use App\Validator\ValidDomainProperty;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Uid\Uuid;
@@ -58,7 +57,7 @@ class DomainProperty
     #[Assert\Valid]
     #[ORM\OneToMany(mappedBy: 'property', targetEntity: DomainPropertyConstraint::class, cascade: ['all'], orphanRemoval: true)]
     #[ORM\OrderBy(['kind' => 'ASC'])]
-    public Collection $constraints;
+    public iterable $constraints;
 
     public function __construct()
     {

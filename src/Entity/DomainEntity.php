@@ -7,7 +7,6 @@ namespace App\Entity;
 use App\Repository\DomainEntityRepository;
 use App\Serializer\Groups;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Uid\Uuid;
@@ -43,19 +42,19 @@ class DomainEntity
     #[Assert\Valid]
     #[ORM\OneToMany(mappedBy: 'entity', targetEntity: DomainProperty::class, cascade: ['all'], orphanRemoval: true)]
     #[ORM\OrderBy(['position' => 'ASC', 'name' => 'ASC'])]
-    public Collection $properties;
+    public iterable $properties;
 
     #[Serializer\Groups([Groups::ReadDomainModel->value])]
     #[Assert\Valid]
     #[ORM\OneToMany(mappedBy: 'sourceEntity', targetEntity: DomainAssociation::class, cascade: ['all'], orphanRemoval: true)]
     #[ORM\OrderBy(['sourcePosition' => 'ASC', 'sourceName' => 'ASC'])]
-    public Collection $sourceAssociations;
+    public iterable $sourceAssociations;
 
     #[Serializer\Groups([Groups::ReadDomainModel->value])]
     #[Assert\Valid]
     #[ORM\OneToMany(mappedBy: 'targetEntity', targetEntity: DomainAssociation::class, cascade: ['all'], orphanRemoval: true)]
     #[ORM\OrderBy(['targetPosition' => 'ASC', 'targetName' => 'ASC'])]
-    public Collection $targetAssociations;
+    public iterable $targetAssociations;
 
     public function __construct()
     {
