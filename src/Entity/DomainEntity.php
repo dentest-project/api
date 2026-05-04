@@ -45,22 +45,16 @@ class DomainEntity
     public iterable $properties;
 
     #[Serializer\Groups([Groups::ReadDomainModel->value])]
+    #[Serializer\MaxDepth(1)]
     #[Assert\Valid]
     #[ORM\OneToMany(mappedBy: 'sourceEntity', targetEntity: DomainAssociation::class, cascade: ['all'], orphanRemoval: true)]
     #[ORM\OrderBy(['sourcePosition' => 'ASC', 'sourceName' => 'ASC'])]
-    public iterable $sourceAssociations;
-
-    #[Serializer\Groups([Groups::ReadDomainModel->value])]
-    #[Assert\Valid]
-    #[ORM\OneToMany(mappedBy: 'targetEntity', targetEntity: DomainAssociation::class, cascade: ['all'], orphanRemoval: true)]
-    #[ORM\OrderBy(['targetPosition' => 'ASC', 'targetName' => 'ASC'])]
-    public iterable $targetAssociations;
+    public iterable $associations;
 
     public function __construct()
     {
         $this->properties = new ArrayCollection();
-        $this->sourceAssociations = new ArrayCollection();
-        $this->targetAssociations = new ArrayCollection();
+        $this->associations = new ArrayCollection();
     }
 
     #[Assert\Callback]
@@ -76,21 +70,14 @@ class DomainEntity
             $this->validateMemberName($property->name, sprintf('properties[%d].name', $index), $memberNames, $context);
         }
 
-        foreach ($this->sourceAssociations as $index => $association) {
+        foreach ($this->associations as $index => $association) {
             if (!isset($association->sourceName)) {
                 continue;
             }
 
-            $this->validateMemberName($association->sourceName, sprintf('sourceAssociations[%d].sourceName', $index), $memberNames, $context);
+            $this->validateMemberName($association->sourceName, sprintf('associations[%d].sourceName', $index), $memberNames, $context);
         }
 
-        foreach ($this->targetAssociations as $index => $association) {
-            if (!isset($association->targetName)) {
-                continue;
-            }
-
-            $this->validateMemberName($association->targetName, sprintf('targetAssociations[%d].targetName', $index), $memberNames, $context);
-        }
     }
 
     private function validateMemberName(
@@ -108,6 +95,64 @@ class DomainEntity
         }
 
         $memberNames[$memberName] = true;
+    }
+
+    /**
+     * @return list<DomainAssociation>
+     */
+    #[Serializer\Groups([Groups::ReadDomainModel->value])]
+    #[Serializer\MaxDepth(1)]
+    public function getTargetAssociations(): array
+    {
+        if (!isset($this->project, $this->project->domainEntities)) {
+            return [];
+        }
+
+        $targetAssociations = [];
+
+        foreach ($this->project->domainEntities as $domainEntity) {
+            if (!isset($domainEntity->associations)) {
+                continue;
+            }
+
+            foreach ($domainEntity->associations as $association) {
+                if ($this->isTargetAssociation($association)) {
+                    $targetAssociations[] = $association;
+                }
+            }
+        }
+
+        usort(
+            $targetAssociations,
+            static function (DomainAssociation $left, DomainAssociation $right): int {
+                $positionComparison = $left->targetPosition <=> $right->targetPosition;
+
+                if (0 !== $positionComparison) {
+                    return $positionComparison;
+                }
+
+                return $left->targetName <=> $right->targetName;
+            }
+        );
+
+        return $targetAssociations;
+    }
+
+    private function isTargetAssociation(DomainAssociation $association): bool
+    {
+        if (!isset($association->targetEntity)) {
+            return false;
+        }
+
+        if ($association->targetEntity === $this) {
+            return true;
+        }
+
+        if (!isset($association->targetEntity->id, $this->id)) {
+            return false;
+        }
+
+        return $association->targetEntity->id === $this->id;
     }
 
     #[ORM\PrePersist]

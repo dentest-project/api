@@ -14,7 +14,6 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity]
 #[ORM\UniqueConstraint(columns: ['source_entity_id', 'source_name'])]
-#[ORM\UniqueConstraint(columns: ['target_entity_id', 'target_name'])]
 #[ORM\HasLifecycleCallbacks]
 class DomainAssociation
 {
@@ -23,8 +22,10 @@ class DomainAssociation
     #[ORM\Column(type: 'uuid', unique: true)]
     public ?string $id = null;
 
+    #[Serializer\Groups([Groups::ReadDomainModel->value])]
+    #[Serializer\MaxDepth(1)]
     #[Assert\NotNull]
-    #[ORM\ManyToOne(targetEntity: DomainEntity::class, inversedBy: 'sourceAssociations')]
+    #[ORM\ManyToOne(targetEntity: DomainEntity::class, inversedBy: 'associations')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     public DomainEntity $sourceEntity;
 
@@ -44,8 +45,10 @@ class DomainAssociation
     #[Assert\GreaterThanOrEqual(0)]
     public int $sourcePosition = 0;
 
+    #[Serializer\Groups([Groups::ReadDomainModel->value])]
+    #[Serializer\MaxDepth(1)]
     #[Assert\NotNull]
-    #[ORM\ManyToOne(targetEntity: DomainEntity::class, inversedBy: 'targetAssociations')]
+    #[ORM\ManyToOne(targetEntity: DomainEntity::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     public DomainEntity $targetEntity;
 
@@ -68,34 +71,6 @@ class DomainAssociation
     #[Serializer\Groups([Groups::ReadDomainModel->value])]
     #[ORM\Column(type: 'text', nullable: true)]
     public ?string $description = null;
-
-    #[Serializer\Groups([Groups::ReadDomainModel->value])]
-    #[Serializer\SerializedName('sourceEntity')]
-    public function getSerializedSourceEntity(): ?array
-    {
-        if (!isset($this->sourceEntity)) {
-            return null;
-        }
-
-        return [
-            'id' => $this->sourceEntity->id,
-            'name' => $this->sourceEntity->name
-        ];
-    }
-
-    #[Serializer\Groups([Groups::ReadDomainModel->value])]
-    #[Serializer\SerializedName('targetEntity')]
-    public function getSerializedTargetEntity(): ?array
-    {
-        if (!isset($this->targetEntity)) {
-            return null;
-        }
-
-        return [
-            'id' => $this->targetEntity->id,
-            'name' => $this->targetEntity->name
-        ];
-    }
 
     #[Assert\Callback]
     public function validateProjectConsistency(ExecutionContextInterface $context): void
