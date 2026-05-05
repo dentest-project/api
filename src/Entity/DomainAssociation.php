@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Entity\DataType\DomainAssociationCardinality;
+use App\Helper\UuidHelper;
 use App\Serializer\Groups;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation as Serializer;
@@ -79,15 +80,18 @@ class DomainAssociation
             return;
         }
 
-        if (null === $this->sourceEntity->id || null === $this->targetEntity->id) {
-            $context->buildViolation('A domain association can only link persisted domain entities.')
+        if (null === $this->targetEntity->id) {
+            $context->buildViolation('A domain association can only target a persisted domain entity.')
                 ->atPath('targetEntity')
                 ->addViolation();
 
             return;
         }
 
-        if ($this->sourceEntity->project !== $this->targetEntity->project) {
+        if (
+            !isset($this->sourceEntity->project, $this->targetEntity->project) ||
+            UuidHelper::canonicalUuid($this->sourceEntity->project->id) !== UuidHelper::canonicalUuid($this->targetEntity->project->id)
+        ) {
             $context->buildViolation('A domain association must link entities from the same project.')
                 ->atPath('targetEntity')
                 ->addViolation();

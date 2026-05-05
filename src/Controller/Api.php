@@ -2,11 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\DomainAssociation;
-use App\Entity\DomainEntity;
 use App\Event\MailEvent;
 use App\Mail\MailInterface;
 use App\Serializer\Groups;
+use App\Serializer\Normalizer\DomainAssociationNormalizer;
 use App\Serializer\Normalizer\FeatureNormalizer;
 use App\Serializer\Normalizer\OrganizationNormalizer;
 use App\Serializer\Normalizer\PathNormalizer;
@@ -38,11 +37,7 @@ abstract class Api extends AbstractController
 
     protected function buildSerializedResponse($data, Groups $group = null, int $statusCode = Response::HTTP_OK): Response
     {
-        $context = [
-            AbstractObjectNormalizer::ENABLE_MAX_DEPTH => true,
-            AbstractObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => fn (object $object, ?string $format = null, array $context = []): mixed => $this->limitSerializedValue($object),
-            AbstractObjectNormalizer::MAX_DEPTH_HANDLER => fn (mixed $value, object $object, string $attributeName, ?string $format = null, array $context = []): mixed => $this->limitSerializedValue($value),
-        ];
+        $context = [AbstractObjectNormalizer::ENABLE_MAX_DEPTH => true];
 
         return new Response(
             $this->serializer->serialize(
@@ -58,36 +53,6 @@ abstract class Api extends AbstractController
                 'Content-type' => 'application/json'
             ]
         );
-    }
-
-    private function limitSerializedValue(mixed $value): mixed
-    {
-        if ($value instanceof DomainEntity) {
-            return [
-                'id' => $value->id ?? null,
-                'name' => $value->name ?? null,
-            ];
-        }
-
-        if ($value instanceof DomainAssociation) {
-            return [
-                'id' => $value->id ?? null,
-                'sourceName' => $value->sourceName ?? null,
-                'targetName' => $value->targetName ?? null,
-            ];
-        }
-
-        if (is_iterable($value)) {
-            $limitedValues = [];
-
-            foreach ($value as $key => $item) {
-                $limitedValues[$key] = $this->limitSerializedValue($item);
-            }
-
-            return $limitedValues;
-        }
-
-        return $value;
     }
 
     /**
@@ -120,6 +85,7 @@ abstract class Api extends AbstractController
 
     #[Required]
     public function setSerializer(
+        DomainAssociationNormalizer $domainAssociationNormalizer,
         FeatureNormalizer $featureNormalizer,
         OrganizationNormalizer $organizationNormalizer,
         PathNormalizer $pathNormalizer,
@@ -128,6 +94,7 @@ abstract class Api extends AbstractController
         $this->serializer = new Serializer([
             new BackedEnumNormalizer(),
             new UidNormalizer(),
+            $domainAssociationNormalizer,
             $featureNormalizer,
             $organizationNormalizer,
             $pathNormalizer,
