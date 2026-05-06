@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\DomainEntity;
-use App\Exception\IncompatibleDomainSchemaException;
-use App\Repository\DomainEntityRepository;
+use App\Entity\DomainFixture;
+use App\Entity\Project;
+use App\Repository\DomainFixtureRepository;
 use App\Security\Voter\Verb;
 use App\Serializer\Groups;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -18,26 +18,28 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/domain-entities', methods: ['PUT'])]
-class EditDomainEntity extends Api
+#[Route('/projects/{domainFixtureProject}/fixtures', methods: ['POST'])]
+class CreateDomainFixture extends Api
 {
     public function __construct(
-        private readonly DomainEntityRepository $domainEntityRepository
+        private readonly DomainFixtureRepository $domainFixtureRepository
     ) {}
 
-    public function __invoke(#[EntityArgument] DomainEntity $domainEntity): Response
+    public function __invoke(Project $domainFixtureProject, #[EntityArgument] DomainFixture $domainFixture): Response
     {
-        $this->denyAccessUnlessGranted(Verb::UPDATE, $domainEntity);
+        $domainFixture->project = $domainFixtureProject;
 
-        $this->validate($domainEntity);
+        $this->denyAccessUnlessGranted(Verb::CREATE, $domainFixture);
+
+        $this->validate($domainFixture);
 
         try {
-            $this->domainEntityRepository->save($domainEntity);
+            $this->domainFixtureRepository->save($domainFixture);
 
-            return $this->buildSerializedResponse($domainEntity, Groups::ReadDomainModel);
+            return $this->buildSerializedResponse($domainFixture, Groups::ReadDomainFixture);
         } catch (UniqueConstraintViolationException) {
             throw new ConflictHttpException();
-        } catch (IncompatibleDomainSchemaException | ORMException | OptimisticLockException $e) {
+        } catch (ORMException | OptimisticLockException $e) {
             throw new UnprocessableEntityHttpException($e->getMessage());
         }
     }

@@ -6,6 +6,8 @@ namespace App\Serializer;
 
 enum Groups: string
 {
+    case ReadDomainFixture = 'READ_DOMAIN_FIXTURE';
+
     case ReadDomainModel = 'READ_DOMAIN_MODEL';
 
     case ListFeatures = 'LIST_FEATURES';

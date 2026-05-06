@@ -1,0 +1,50 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use App\Entity\DomainFixture;
+use App\Entity\Project;
+use App\Helper\UuidHelper;
+use App\Repository\DomainFixtureRepository;
+use App\Security\Voter\Verb;
+use App\Serializer\Groups;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use RollandRock\ParamConverterBundle\Attribute\EntityArgument;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\Routing\Attribute\Route;
+
+#[Route('/projects/{project}/fixtures', methods: ['PUT'])]
+class EditDomainFixture extends Api
+{
+    public function __construct(
+        private readonly DomainFixtureRepository $domainFixtureRepository
+    ) {}
+
+    public function __invoke(Project $project, #[EntityArgument] DomainFixture $domainFixture): Response
+    {
+        if (!isset($domainFixture->project) || UuidHelper::canonicalUuid($domainFixture->project->id) !== UuidHelper::canonicalUuid($project->id)) {
+            throw new AccessDeniedHttpException();
+        }
+
+        $this->denyAccessUnlessGranted(Verb::UPDATE, $domainFixture);
+
+        $this->validate($domainFixture);
+
+        try {
+            $this->domainFixtureRepository->save($domainFixture);
+
+            return $this->buildSerializedResponse($domainFixture, Groups::ReadDomainFixture);
+        } catch (UniqueConstraintViolationException) {
+            throw new ConflictHttpException();
+        } catch (ORMException | OptimisticLockException $e) {
+            throw new UnprocessableEntityHttpException($e->getMessage());
+        }
+    }
+}

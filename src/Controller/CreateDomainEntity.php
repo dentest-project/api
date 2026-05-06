@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\DomainEntity;
+use App\Exception\IncompatibleDomainSchemaException;
 use App\Repository\DomainEntityRepository;
 use App\Security\Voter\Verb;
 use App\Serializer\Groups;
@@ -34,7 +35,7 @@ class CreateDomainEntity extends Api
             $this->domainEntityRepository->save($domainEntity);
 
             return $this->buildSerializedResponse($domainEntity, Groups::ReadDomainModel);
-        } catch (ORMException | OptimisticLockException $e) {
+        } catch (IncompatibleDomainSchemaException | ORMException | OptimisticLockException $e) {
             throw new UnprocessableEntityHttpException($e->getMessage());
         } catch (UniqueConstraintViolationException $e) {
             throw new ConflictHttpException();

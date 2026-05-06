@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 #[ORM\HasLifecycleCallbacks]
 class DomainEntity
 {
-    #[Serializer\Groups([Groups::ReadDomainModel->value])]
+    #[Serializer\Groups([Groups::ReadDomainModel->value, Groups::ReadDomainFixture->value])]
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
     public ?string $id = null;
@@ -28,7 +28,7 @@ class DomainEntity
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     public Project $project;
 
-    #[Serializer\Groups([Groups::ReadDomainModel->value])]
+    #[Serializer\Groups([Groups::ReadDomainModel->value, Groups::ReadDomainFixture->value])]
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\Length(min: 1, max: 255, normalizer: 'trim')]
     #[Assert\NotBlank(normalizer: 'trim')]

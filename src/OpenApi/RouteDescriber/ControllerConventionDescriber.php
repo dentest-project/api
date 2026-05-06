@@ -423,6 +423,13 @@ final class ControllerConventionDescriber implements RouteDescriberInterface, Mo
             ];
         }
 
+        if (($shape['kind'] ?? null) === 'model' && is_string($shape['class'] ?? null) && $shape['class'] !== $guessedClass) {
+            return [
+                ...$shape,
+                'class' => $guessedClass,
+            ];
+        }
+
         if (($shape['kind'] ?? null) === 'array' && ($shape['items'] ?? null) === null) {
             return [
                 'kind' => 'model',
@@ -451,8 +458,6 @@ final class ControllerConventionDescriber implements RouteDescriberInterface, Mo
         foreach (array_values(array_unique(array_filter($candidates))) as $candidate) {
             foreach ([
                 'App\\Entity\\'.$candidate,
-                'App\\Model\\Response\\'.$candidate,
-                'App\\Model\\Response\\'.$candidate.'Response',
             ] as $className) {
                 if (class_exists($className)) {
                     return $className;
