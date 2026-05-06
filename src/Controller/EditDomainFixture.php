@@ -20,16 +20,19 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/projects/{project}/fixtures', methods: ['PUT'])]
+#[Route('/projects/{domainFixtureProject}/fixtures', methods: ['PUT'])]
 class EditDomainFixture extends Api
 {
     public function __construct(
         private readonly DomainFixtureRepository $domainFixtureRepository
     ) {}
 
-    public function __invoke(Project $project, #[EntityArgument] DomainFixture $domainFixture): Response
+    public function __invoke(Project $domainFixtureProject, #[EntityArgument] DomainFixture $domainFixture): Response
     {
-        if (!isset($domainFixture->project) || UuidHelper::canonicalUuid($domainFixture->project->id) !== UuidHelper::canonicalUuid($project->id)) {
+        if (
+            !isset($domainFixture->project) ||
+            UuidHelper::canonicalUuid($domainFixture->project->id) !== UuidHelper::canonicalUuid($domainFixtureProject->id)
+        ) {
             throw new AccessDeniedHttpException();
         }
 

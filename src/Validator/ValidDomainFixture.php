@@ -9,4 +9,8 @@ use Symfony\Component\Validator\Constraint;
 #[\Attribute(\Attribute::TARGET_CLASS)]
 class ValidDomainFixture extends Constraint
 {
+    public function getTargets(): string
+    {
+        return self::CLASS_CONSTRAINT;
+    }
 }
