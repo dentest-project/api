@@ -39,7 +39,8 @@ readonly class OriginHttpHeaderSubscriber implements EventSubscriberInterface
     {
         $response = $event->getResponse();
         $response->headers->add([
-            'Access-Control-Allow-Origin' => $this->allowedOrigins
+            'Access-Control-Allow-Origin' => $this->allowedOrigins,
+            'Access-Control-Allow-Credentials' => 'true'
         ]);
     }
 
