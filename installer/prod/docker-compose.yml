@@ -52,6 +52,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-dentest}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMe}
       POSTGRES_USER: ${POSTGRES_USER:-dentest}
+    ports:
+      - "${POSTGRES_BIND_ADDRESS:-127.0.0.1}:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data:rw
       - ${POSTGRES_DATA:-./docker/db/data}:/var/lib/postgresql/data:rw
