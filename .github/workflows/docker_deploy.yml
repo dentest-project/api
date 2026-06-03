@@ -15,6 +15,7 @@ jobs:
         env:
           DEPLOYER_AGENT_PRIVATE_KEY: ${{ secrets.PROD_DEPLOYER_AGENT_PRIVATE_KEY }}
           DEPLOY_TO: ${{ secrets.PROD_SERVER }}
+          POSTGRES_HOST_PORT: ${{ secrets.POSTGRES_HOST_PORT }}
           DEPLOY_DIR: "/var/www/dockerize-dentest-api"
           ACTOR: ${{ github.actor }}
           CR_PAT: ${{ secrets.READ_PACKAGES_REGISTRY_TOKEN }}
