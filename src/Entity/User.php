@@ -4,7 +4,6 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use App\Serializer\Groups;
-use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -65,10 +64,6 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
     #[Serializer\Ignore]
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: OrganizationUser::class, cascade: ['all'], orphanRemoval: true)]
     public iterable $organizations = [];
-
-    #[Serializer\Ignore]
-    #[ORM\Column(type: 'datetimetz', nullable: true)]
-    public ?DateTime $lastResetPasswordRequest = null;
 
     #[Serializer\Ignore]
     #[ORM\Column(type: 'string', length: 50, nullable: true)]

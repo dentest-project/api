@@ -7,9 +7,7 @@ use App\Exception\UserAlreadyExistsException;
 use App\Exception\UserNotFoundException;
 use App\Model\Request\UpdateMeRequestModel;
 use App\Repository\UserRepository;
-use DateTime;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
-use Symfony\Component\Uid\Uuid;
 
 readonly class UserManager
 {
@@ -79,25 +77,4 @@ readonly class UserManager
         return $user;
     }
 
-    /**
-     * @throws UserNotFoundException
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
-    public function resetPasswordRequest(string $email): User
-    {
-        $user = $this->userRepository->findOneByEmailForResetPassword($email);
-
-        if (null === $user) {
-            throw new UserNotFoundException();
-        }
-
-        $user->resetPasswordCode = str_replace('-', '', Uuid::v4()->toRfc4122());
-        $user->lastResetPasswordRequest = new DateTime();
-
-        $this->userRepository->save($user);
-
-        return $user;
-    }
 }

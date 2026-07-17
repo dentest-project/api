@@ -601,7 +601,7 @@ final class ControllerConventionDescriber implements RouteDescriberInterface, Mo
 
         foreach ($segments as $segment) {
             if (!str_starts_with($segment, '{')) {
-                return in_array($segment, ['reset-password', 'reset-password-request'], true)
+                return in_array($segment, ['reset-password'], true)
                     ? 'auth'
                     : $segment;
             }
