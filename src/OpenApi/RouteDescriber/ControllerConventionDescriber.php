@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace App\OpenApi\RouteDescriber;
 
-use App\Controller\Login;
-use App\Model\Request\LoginRequestModel;
-use App\Model\Response\AuthenticationFailureResponse;
-use App\Model\Response\LoginSuccessResponse;
 use App\OpenApi\OpenApiHelper;
 use App\OpenApi\ResponseShapeResolver;
 use App\Serializer\Groups;
@@ -67,14 +63,6 @@ final class ControllerConventionDescriber implements RouteDescriberInterface, Mo
         foreach ($this->getOperations($api, $route) as $operation) {
             $this->applyOperationMetadata($operation, $route, $reflectionMethod, $routePlaceholders, $lookupOnlyEntityArgument);
             $this->applySecurity($operation, $route, $classMethod);
-
-            if ($reflectionMethod->getDeclaringClass()->getName() === Login::class) {
-                $this->addJsonRequestBody($operation, LoginRequestModel::class);
-                $this->addJsonModelResponse($operation, 200, LoginSuccessResponse::class, 'JWT created');
-                $this->addJsonModelResponse($operation, 401, AuthenticationFailureResponse::class, 'Authentication failed');
-
-                continue;
-            }
 
             if ($lookupOnlyEntityArgument) {
                 $operation->requestBody = Generator::UNDEFINED;
@@ -613,7 +601,7 @@ final class ControllerConventionDescriber implements RouteDescriberInterface, Mo
 
         foreach ($segments as $segment) {
             if (!str_starts_with($segment, '{')) {
-                return in_array($segment, ['login', 'register', 'reset-password', 'reset-password-request'], true)
+                return in_array($segment, ['reset-password', 'reset-password-request'], true)
                     ? 'auth'
                     : $segment;
             }
