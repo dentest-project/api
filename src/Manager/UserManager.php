@@ -4,7 +4,6 @@ namespace App\Manager;
 
 use App\Entity\User;
 use App\Exception\UserAlreadyExistsException;
-use App\Exception\UserNotFoundException;
 use App\Model\Request\UpdateMeRequestModel;
 use App\Repository\UserRepository;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
@@ -55,26 +54,4 @@ readonly class UserManager
 
         $this->userRepository->save($user);
     }
-
-    /**
-     * @throws UserNotFoundException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
-    public function resetPassword(string $code, string $newPassword): User
-    {
-        /** @var User $user */
-        $user = $this->userRepository->findOneBy(['resetPasswordCode' => $code]);
-
-        if (null === $user) {
-            throw new UserNotFoundException();
-        }
-
-        $user->resetPasswordCode = null;
-        $user->password = $this->passwordHasherFactory->getPasswordHasher(User::class)->hash($newPassword, '');
-        $this->userRepository->save($user);
-
-        return $user;
-    }
-
 }

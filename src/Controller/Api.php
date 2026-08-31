@@ -2,8 +2,6 @@
 
 namespace App\Controller;
 
-use App\Event\MailEvent;
-use App\Mail\MailInterface;
 use App\Serializer\Groups;
 use App\Serializer\Normalizer\DomainAssociationNormalizer;
 use App\Serializer\Normalizer\FeatureNormalizer;
@@ -11,10 +9,8 @@ use App\Serializer\Normalizer\OrganizationNormalizer;
 use App\Serializer\Normalizer\PathNormalizer;
 use App\Serializer\Normalizer\ProjectNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
@@ -29,8 +25,6 @@ use Symfony\Contracts\Service\Attribute\Required;
 
 abstract class Api extends AbstractController
 {
-    protected EventDispatcherInterface $dispatcher;
-
     protected SerializerInterface $serializer;
 
     protected ValidatorInterface $validator;
@@ -65,22 +59,6 @@ abstract class Api extends AbstractController
         if ($errors->count() > 0) {
             throw new BadRequestHttpException();
         }
-    }
-
-    protected function sendMail(string $to, MailInterface $mail): void
-    {
-        $this
-            ->dispatcher
-            ->addListener(
-                KernelEvents::TERMINATE,
-                fn () => $this->dispatcher->dispatch(new MailEvent($to, $mail), MailEvent::NAME)
-            );
-    }
-
-    #[Required]
-    public function setEventDispatcher(EventDispatcherInterface $dispatcher): void
-    {
-        $this->dispatcher = $dispatcher;
     }
 
     #[Required]
