@@ -22,7 +22,6 @@ security:
             jwt: ~
     access_control:
         - { path: ^/doc(?:\.json)?$, roles: PUBLIC_ACCESS }
-        - { path: ^/me/?$, roles: ROLE_USER }
         - { path: ^/pull/, roles: ROLE_PULL }
         - { path: ^/, roles: ROLE_USER, methods: [DELETE, POST, PUT] }
         - { path: ^/organizations/?$, roles: ROLE_USER, methods: [GET] }
