@@ -15,53 +15,12 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     */
-    public function findOneByEmailOrUsername(User $user): ?User
-    {
-        return $this
-            ->createQueryBuilder('u')
-            ->where('u.email = :email')
-            ->orWhere('u.username = :username')
-            ->setParameter('email', $user->email)
-            ->setParameter('username', $user->username)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
-
-    /**
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     */
-    public function findOtherByEmailOrUsername(User $user, string $email, string $username): ?User
-    {
-        return $this
-            ->createQueryBuilder('u')
-            ->where('u.email = :email OR u.username = :username')
-            ->andWhere('u.id <> :id')
-            ->setParameter('email', $email)
-            ->setParameter('username', $username)
-            ->setParameter('id', $user->id)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
-
-    /**
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function delete(User $user): void
     {
         $this->_em->remove($user);
-        $this->_em->flush();
-    }
-
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
-    public function save(User $user): void
-    {
-        $this->_em->persist($user);
         $this->_em->flush();
     }
 
