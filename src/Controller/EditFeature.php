@@ -6,7 +6,6 @@ use App\Entity\Feature;
 use App\Repository\FeatureRepository;
 use App\Security\Voter\Verb;
 use App\Serializer\Groups;
-use App\SummaryGeneration\SummaryQueuing\SummaryUpdateScheduler;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
@@ -20,8 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class EditFeature extends Api
 {
     public function __construct(
-        private readonly FeatureRepository $featureRepository,
-        private readonly SummaryUpdateScheduler $summaryUpdateScheduler
+        private readonly FeatureRepository $featureRepository
     ) {}
 
     public function __invoke(#[EntityArgument] Feature $feature): Response
@@ -30,11 +28,8 @@ class EditFeature extends Api
 
         $this->validate($feature);
 
-        $previousStatus = $feature->id ? $this->featureRepository->findStatusById($feature->id) : null;
-
         try {
             $this->featureRepository->save($feature);
-            $this->summaryUpdateScheduler->scheduleFeatureUpdates($feature, $previousStatus);
 
             return $this->buildSerializedResponse($feature, Groups::ReadFeature);
         } catch (ORMException | OptimisticLockException $e) {

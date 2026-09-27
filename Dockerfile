@@ -36,23 +36,14 @@ RUN set -eux; \
     	intl \
     	zip \
     	opcache \
-        amqp \
         gd \
         json \
         mbstring \
         pgsql \
+        pdo_pgsql \
         xml \
     ;
 #       apcu \
-
-###> recipes ###
-###> doctrine/doctrine-bundle ###
-RUN apk add --no-cache --virtual .pgsql-deps postgresql-dev; \
-       docker-php-ext-install -j$(nproc) pdo_pgsql; \
-       apk add --no-cache --virtual .pgsql-rundeps so:libpq.so.5; \
-       apk del .pgsql-deps
-###< doctrine/doctrine-bundle ###
-###< recipes ###
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY --link docker/php/conf.d/app.ini $PHP_INI_DIR/conf.d/
@@ -103,6 +94,8 @@ RUN set -eux; \
 FROM app_php AS app_php_dev
 
 ENV APP_ENV=dev XDEBUG_MODE=off
+ARG XDEBUG_VERSION=3.5.3
+ARG XDEBUG_SHA256=f073de91bea046106abf4d6071c963ea71e58571df6ce58948ceca89d121cb2d
 VOLUME /srv/app/var/
 
 RUN rm $PHP_INI_DIR/conf.d/app.prod.ini; \
@@ -112,7 +105,20 @@ RUN rm $PHP_INI_DIR/conf.d/app.prod.ini; \
 COPY --link docker/php/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
 
 RUN set -eux; \
-	install-php-extensions xdebug
+	apk add --no-cache --virtual .xdebug-build-deps $PHPIZE_DEPS curl linux-headers; \
+	curl -fsSL -o /tmp/xdebug.tgz "https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz"; \
+	echo "${XDEBUG_SHA256}  /tmp/xdebug.tgz" | sha256sum -c -; \
+	mkdir -p /tmp/xdebug; \
+	tar -xzf /tmp/xdebug.tgz -C /tmp/xdebug --strip-components=1; \
+	cd /tmp/xdebug; \
+	phpize; \
+	./configure --enable-xdebug; \
+	make -j"$(nproc)"; \
+	make install; \
+	docker-php-ext-enable xdebug; \
+	cd /; \
+	rm -rf /tmp/xdebug /tmp/xdebug.tgz; \
+	apk del .xdebug-build-deps
 
 RUN rm -f .env.local.php
 

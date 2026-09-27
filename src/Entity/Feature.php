@@ -43,10 +43,10 @@ class Feature
     #[Assert\Length(max: 1024, normalizer: 'trim')]
     public string $description = "As an <actor>\nI want to <action>\nSo that <consequence>";
 
-    #[Serializer\Groups([Groups::ReadFeature->value])]
+    // Retained only to preserve the existing database column.
+    #[Serializer\Ignore]
     #[ORM\Column(type: 'text')]
-    #[Assert\Length(max: 10000, normalizer: 'trim')]
-    public string $summary = '';
+    private string $summary = '';
 
     #[Serializer\Groups([Groups::ReadFeature->value])]
     #[ORM\OneToMany(mappedBy: 'feature', targetEntity: Scenario::class, cascade: ['all'], orphanRemoval: true)]
