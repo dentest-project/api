@@ -5,7 +5,6 @@ namespace App\Repository;
 use App\Entity\Organization;
 use App\Entity\OrganizationUser;
 use App\Entity\User;
-use App\Security\OrganizationPermission;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -29,20 +28,6 @@ class OrganizationUserRepository extends ServiceEntityRepository
     public function findOneByUserAndOrganization(User $user, Organization $organization): ?OrganizationUser
     {
         return $this->findOneBy(['user' => $user, 'organization' => $organization]);
-    }
-
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
-    public function makeAdmin(User $user, Organization $organization): void
-    {
-        $organizationUser = new OrganizationUser();
-        $organizationUser->organization = $organization;
-        $organizationUser->user = $user;
-        $organizationUser->permissions = [OrganizationPermission::ADMIN];
-
-        $this->save($organizationUser);
     }
 
     /**
