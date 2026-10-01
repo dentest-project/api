@@ -12,8 +12,6 @@ enum Groups: string
 
     case ListFeatures = 'LIST_FEATURES';
 
-    case ListOrganizations = 'LIST_ORGANIZATIONS';
-
     case ListOrganizationIssueTrackerConfigurations = 'LIST_ORGANIZATION_ISSUE_TRACKER_CONFIGURATIONS';
 
     case ListOrganizationUsers = 'LIST_ORGANIZATION_USERS';

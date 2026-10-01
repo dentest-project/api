@@ -16,7 +16,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Organization
 {
     #[Serializer\Groups([
-        Groups::ListOrganizations->value,
         Groups::ListProjects->value,
         Groups::ReadFeature->value,
         Groups::ReadOrganization->value,
@@ -29,7 +28,6 @@ class Organization
     public string $id;
 
     #[Serializer\Groups([
-        Groups::ListOrganizations->value,
         Groups::ListProjects->value,
         Groups::ReadFeature->value,
         Groups::ReadOrganization->value,
@@ -40,7 +38,6 @@ class Organization
     public string $slug;
 
     #[Serializer\Groups([
-        Groups::ListOrganizations->value,
         Groups::ReadFeature->value,
         Groups::ReadOrganization->value,
         Groups::ReadPath->value,
